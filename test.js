@@ -25,10 +25,19 @@ class MyMessageElement extends HTMLElement {
         this.shadowRoot.innerHTML = `<button id="myButton">Click Me</button>`;
 
         this.shadowRoot.querySelector('#myButton').addEventListener('click', () => {
-            globalFunction(); // Call the global function
+           var i = globalFunction(); // Call the global function
+           console.log(i);
         });
         this.shadowRoot.appendChild(template.content.cloneNode(true));
 
+        document.addEventListener('themeChange', (event) => {
+            this.setTheme(event.detail);
+            console.log("updating theme inside the shadow dom");
+        });
+    }
+
+    setTheme(theme) {
+        this.setAttribute('theme', theme);
     }
 
     connectedCallback() {
