@@ -5,12 +5,35 @@
     <script>
         function globalFunction() {
             alert("This is a function in the global scope.");
+            return 1;
         }
     </script>
     <script src="test.js"></script>  
 </head>
 <body>
 HEllo World!
+
+</br> </br>
+
+<button id="themeSwitcher">Switch Theme</button>
+
+<script>
+
+const themeSwitcher = document.getElementById('themeSwitcher');
+    let currentTheme = 'light';
+
+    themeSwitcher.addEventListener('click', () => {
+        console.log("dispatching event");
+        currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+        const themeChangeEvent = new CustomEvent('themeChange', {
+            detail: currentTheme,
+            bubbles: true // Make the event bubble up through the DOM
+        });
+        document.dispatchEvent(themeChangeEvent);
+    });
+
+</script>
+
 <my-message-element message="Hello, this is a custom element!"></my-message-element>
 
 <script>
