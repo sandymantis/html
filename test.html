@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Custom Element Example</title>
+    <script>
+        function globalFunction() {
+            alert("This is a function in the global scope.");
+        }
+    </script>
+    <script src="test.js"></script>  
+</head>
+<body>
+HEllo World!
+<my-message-element message="Hello, this is a custom element!"></my-message-element>
+
+<script>
+console.log("hi")
+
+// Define the custom element
+customElements.define('my-message-element', MyMessageElement);
+
+
+</script>
+
+</body>
+</html>
+ 
