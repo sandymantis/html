@@ -31,3 +31,33 @@
   </script>
 </body>
 </html>
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Microfrontend Orchestrator</title>
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="/app1">App 1</a></li>
+            <li><a href="/app2">App 2</a></li>
+        </ul>
+    </nav>
+
+    <!-- The reserved node where the microfrontend markup will be injected -->
+    <app-content></app-content>
+
+    <script type="module">
+        import { MicroFrontendOrchestrator } from './orchestrator.js';
+
+        const orchestrator = new MicroFrontendOrchestrator();
+    </script>
+</body>
+</html>
+
