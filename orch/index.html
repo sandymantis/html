@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Microfrontend Orchestrator</title>
+</head>
+<body>
+  <nav>
+    <ul>
+      <li><a href="/app1" onclick="navigateTo('/app1')">App 1</a></li>
+      <li><a href="/app2" onclick="navigateTo('/app2')">App 2</a></li>
+    </ul>
+  </nav>
+
+  <!-- The reserved node where the microfrontend markup will be injected -->
+  <app-content></app-content>
+
+  <script type="module">
+    import { MicroFrontendOrchestrator } from './orchestrator.js';
+
+    const orchestrator = new MicroFrontendOrchestrator();
+    orchestrator.registerRoute('/app1', 'App1');
+    orchestrator.registerRoute('/app2', 'App2');
+
+    // Handle internal navigation without refreshing the page
+    window.navigateTo = (path) => {
+      window.history.pushState({}, '', path);
+      orchestrator.handleRouteChange();
+    };
+  </script>
+</body>
+</html>
