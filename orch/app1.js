@@ -73,3 +73,18 @@ export async function close() {
   console.log('App 1 is being closed');
   // If needed, you could do additional cleanup here
 }
+
+
+
+
+**********
+
+  this.shadowRoot.innerHTML = `
+      <style>
+        /* Shadow DOM specific styles */
+        p {
+          color: red; /* Independent of light DOM styles */
+        }
+      </style>
+      <p>Hello, World!</p>
+    `;
