@@ -1,0 +1,54 @@
+/* Define global CSS custom properties (tokens) */
+:root {
+  --font-family: Arial, sans-serif;
+  --background-color: #f0f0f0;
+  --text-color: #333;
+  --primary-color: #007bff;
+  --secondary-color: #6c757d;
+  --header-background: #343a40;
+  --header-text-color: #ffffff;
+}
+
+/* Default theme (Light Theme) */
+.light-theme {
+  --background-color: #ffffff;
+  --text-color: #000000;
+  --primary-color: #007bff;
+  --secondary-color: #6c757d;
+  --header-background: #343a40;
+  --header-text-color: #ffffff;
+}
+
+/* Dark theme */
+.dark-theme {
+  --background-color: #121212;
+  --text-color: #e0e0e0;
+  --primary-color: #bb86fc;
+  --secondary-color: #03dac6;
+  --header-background: #1f1f1f;
+  --header-text-color: #ffffff;
+}
+
+/* Global Styles */
+body {
+  font-family: var(--font-family);
+  background-color: var(--background-color);
+  color: var(--text-color);
+  margin: 0;
+  padding: 0;
+}
+
+h1 {
+  color: var(--header-text-color);
+  background-color: var(--header-background);
+  padding: 1rem;
+  margin: 0;
+}
+
+a {
+  color: var(--primary-color);
+}
+
+a:hover {
+  color: var(--secondary-color);
+}
