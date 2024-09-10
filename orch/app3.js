@@ -96,3 +96,22 @@ export async function close() {
   console.log('App 1 is being closed');
   // If needed, you could do additional cleanup here
 }
+
+
+
+
+// app1.js
+import './card.js';  // Import the common card component
+
+export class App1Component extends HTMLElement {
+  connectedCallback() {
+    this.innerHTML = `
+      <card-component>
+        <span slot="title">App 1 Title</span>
+        <span slot="content">This is the content for App 1</span>
+      </card-component>
+    `;
+  }
+}
+
+customElements.define('app1-component', App1Component);
