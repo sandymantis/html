@@ -1,0 +1,14 @@
+<div class="complex-container">
+  <h2>{{ title }}</h2>
+  <button (click)="toggleDetails()">Toggle Details</button>
+  <p *ngIf="showDetails">Name: {{ data.name }}, Age: {{ data.age }}, Address: {{ data.address }}</p>
+  
+  <ul>
+    <li *ngFor="let item of items">{{ item }}</li>
+  </ul>
+  
+  <input #newItem type="text" placeholder="Add new item"/>
+  <button (click)="addItem(newItem.value); newItem.value=''">Add Item</button>
+  
+  <app-nested></app-nested>
+</div>
