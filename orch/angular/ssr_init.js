@@ -77,3 +77,18 @@ init();
         console.error('Error during SSR and script injection:', error);
     }
 }
+
+
+*************
+
+      // Extract script tags with src starting with 'main'
+    const allScripts = tempContainer.querySelectorAll('script[src]');
+    allScripts.forEach(script => {
+        if (script.src.startsWith('main')) {
+            // Append only those script tags whose src starts with 'main'
+            const newScript = document.createElement('script');
+            newScript.src = script.src;
+            newScript.async = false;  // Ensure the scripts are executed in order
+            document.head.appendChild(newScript);
+        }
+    });
