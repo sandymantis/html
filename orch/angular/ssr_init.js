@@ -92,3 +92,35 @@ init();
             document.head.appendChild(newScript);
         }
     });
+
+
+
+
+
+^^^^^^^^^^^^^^^^
+
+function init() {
+    fetch('http://localhost:4000')
+        .then(response => response.text())
+        .then(html => {
+            // Create a temporary container to parse the HTML
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+            
+            // Extract the SSR-rendered element
+            const appComplexElement = tempDiv.querySelector('app-complex');
+            
+            // Clear the target location and append the SSR-rendered element
+            const targetLocation = document.getElementById('target-location');
+            targetLocation.innerHTML = '';
+            targetLocation.appendChild(appComplexElement);
+
+            // Dynamically load and execute the main.js script only after the element is in the DOM
+            const script = document.createElement('script');
+            script.src = 'http://localhost:4000/main.js';
+            script.onload = () => {
+                console.log('Hydration script loaded and executed');
+            };
+            document.body.appendChild(script);
+        });
+}
