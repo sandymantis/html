@@ -4,3 +4,16 @@
   <button (click)="incrementCounter()">Click me</button>
   <p>Button clicked {{ counter }} times</p>
 </div>
+
+
+
+
+<div>
+  <h1>API Data Example with SSR and CSR</h1>
+  <p>The data below was fetched from a public API:</p>
+  <ul>
+    <li *ngFor="let item of apiData">{{ item }}</li>
+  </ul>
+
+  <button (click)="refreshData()">Refresh Data (CSR)</button>
+</div>
