@@ -60,11 +60,14 @@ export interface Weather {
   };
 }
 
-
+  refreshPosts(): void {
+    this.fetchPosts(); // Re-fetch the posts when the button is clicked
+  }
 <div>
   <h2>Server-Side Rendered API Data</h2>
   
   <h3>Posts:</h3>
+  <button (click)="refreshPosts()">Refresh Posts</button>
   <ul>
     <li *ngFor="let post of posts">
       <strong>{{ post.title }}</strong>
@@ -78,3 +81,4 @@ export interface Weather {
     <p>Weather: {{ weatherData.weather[0].description }}</p>
   </div>
 </div>
+
