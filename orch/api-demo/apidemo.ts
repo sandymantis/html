@@ -249,3 +249,43 @@ export class ExampleComponent implements OnInit {
 }
 
 
+
+
+
+import { Component, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+
+@Component({
+  selector: 'app-api-demo',
+  template: `
+    <div>
+      <h2>Random Joke</h2>
+      <button (click)="fetchRandomJoke()">Get Another Joke</button>
+      <div *ngIf="joke">
+        <p><strong>Setup:</strong> {{ joke.setup }}</p>
+        <p><strong>Punchline:</strong> {{ joke.punchline }}</p>
+      </div>
+    </div>
+  `,
+})
+export class ApiDemoComponent implements OnInit {
+  joke: any;
+
+  constructor(private http: HttpClient) {}
+
+  ngOnInit(): void {
+    this.fetchRandomJoke();
+  }
+
+  fetchRandomJoke(): void {
+    this.http.get('https://official-joke-api.appspot.com/random_joke').subscribe(
+      (data: any) => {
+        this.joke = data;
+      },
+      (error) => {
+        console.error('Error fetching joke:', error);
+      }
+    );
+  }
+}
+
