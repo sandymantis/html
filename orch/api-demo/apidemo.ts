@@ -25,6 +25,55 @@ export class ApiDemoComponent implements OnInit {
         this.posts = data;
       });
   }
+import { Component, OnInit, ElementRef } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+
+@Component({
+  selector: 'app-example',
+  template: `<div id="ssr-rendered"></div>`, // This is where we'll append the specificNode
+})
+export class ExampleComponent implements OnInit {
+  constructor(private http: HttpClient, private elementRef: ElementRef) {}
+
+  ngOnInit(): void {
+    this.fetchAndParseHTML();
+  }
+
+  fetchAndParseHTML(): void {
+    this.http.get('http://localhost:4001', { responseType: 'text' }).subscribe(
+      (responseText) => {
+        // Parse the HTML from the response text
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(responseText, 'text/html');
+
+        // Run querySelector to get a specific node within this HTML
+        const specificNode = doc.querySelector('#desired-node'); // Change '#desired-node' to the selector of the node you want to select
+
+        if (specificNode) {
+          console.log('Found node:', specificNode);
+
+          // Find the element with id="ssr-rendered" in the parent HTML's light DOM
+          const ssrRenderedElement = this.elementRef.nativeElement.querySelector('#ssr-rendered');
+
+          if (ssrRenderedElement) {
+            // Empty the contents of ssrRenderedElement
+            ssrRenderedElement.innerHTML = '';
+
+            // Append the specificNode to ssrRenderedElement
+            ssrRenderedElement.appendChild(specificNode);
+          } else {
+            console.error('Element with id="ssr-rendered" not found in the light DOM.');
+          }
+        } else {
+          console.error('Specific node not found in the fetched HTML.');
+        }
+      },
+      (error) => {
+        console.error('Error fetching data:', error);
+      }
+    );
+  }
+}
 
   fetchWeather(): void {
     const apiKey = 'your-openweathermap-api-key';
