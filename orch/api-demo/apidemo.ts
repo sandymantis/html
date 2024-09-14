@@ -82,3 +82,68 @@ export interface Weather {
   </div>
 </div>
 
+
+  import { registerApplication, start } from 'single-spa';
+
+// MF1: Angular with CSR
+registerApplication({
+  name: 'mf1-angular-csr',
+  app: () => System.import('mf1-angular-csr/main.js'),
+  activeWhen: (location) => location.pathname.startsWith('/mf1'),
+});
+
+// MF2: Angular with SSR
+registerApplication({
+  name: 'mf2-angular-ssr',
+  app: () => {
+    return fetch('http://localhost:4000/mf2/render')
+      .then(response => response.text())
+      .then(html => {
+        const container = document.getElementById('mf2-container');
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const bodyContent = doc.body.innerHTML;
+        container.innerHTML = bodyContent;
+
+        // Hydrate the Angular app
+        return System.import('mf2-angular-ssr/main.js');
+      });
+  },
+  activeWhen: (location) => location.pathname.startsWith('/mf2'),
+  customProps: {
+    domElementGetter: () => document.getElementById('mf2-container'),
+  },
+});
+
+// MF3: React with CSR
+registerApplication({
+  name: 'mf3-react-csr',
+  app: () => System.import('mf3-react-csr/main.js'),
+  activeWhen: (location) => location.pathname.startsWith('/mf3'),
+});
+
+// MF4: React with SSR
+registerApplication({
+  name: 'mf4-react-ssr',
+  app: () => {
+    return fetch('http://localhost:4001/mf4/render')
+      .then(response => response.text())
+      .then(html => {
+        const container = document.getElementById('mf4-container');
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const bodyContent = doc.body.innerHTML;
+        container.innerHTML = bodyContent;
+
+        // Hydrate the React app
+        return System.import('mf4-react-ssr/main.js');
+      });
+  },
+  activeWhen: (location) => location.pathname.startsWith('/mf4'),
+  customProps: {
+    domElementGetter: () => document.getElementById('mf4-container'),
+  },
+});
+
+start();
+
