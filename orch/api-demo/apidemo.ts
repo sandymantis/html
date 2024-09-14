@@ -289,3 +289,40 @@ export class ApiDemoComponent implements OnInit {
   }
 }
 
+import { Component, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Joke } from '../models/joke.model';  // Import the Joke interface
+
+@Component({
+  selector: 'app-api-demo',
+  template: `
+    <div>
+      <h2>Random Joke</h2>
+      <button (click)="fetchRandomJoke()">Get Another Joke</button> <!-- Refresh Joke Button -->
+      <div *ngIf="joke">
+        <p><strong>Setup:</strong> {{ joke.setup }}</p>
+        <p><strong>Punchline:</strong> {{ joke.punchline }}</p>
+      </div>
+    </div>
+  `,
+})
+export class ApiDemoComponent implements OnInit {
+  joke: Joke | undefined;  // Use the Joke interface
+
+  constructor(private http: HttpClient) {}
+
+  ngOnInit(): void {
+    this.fetchRandomJoke(); // Fetch a joke when the component initializes
+  }
+
+  fetchRandomJoke(): void {
+    this.http.get<Joke>('https://official-joke-api.appspot.com/random_joke').subscribe(
+      (data: Joke) => {
+        this.joke = data;
+      },
+      (error) => {
+        console.error('Error fetching joke:', error);
+      }
+    );
+  }
+}
