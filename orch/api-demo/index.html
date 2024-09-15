@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Microfrontend Orchestrator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+        }
+
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 0;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2rem;
+        }
+
+        nav {
+            background-color: #333;
+            width: 100%;
+            padding: 10px 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        nav a {
+            color: white;
+            margin: 0 15px;
+            text-decoration: none;
+            font-size: 1rem;
+        }
+
+        nav a:hover {
+            text-decoration: underline;
+        }
+
+        .content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 90%;
+            max-width: 1200px;
+            margin-top: 20px;
+            flex-grow: 1;
+        }
+
+        app-component {
+            display: block;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            height: 500px; /* Adjust the height as needed */
+            padding: 20px;
+            text-align: center;
+        }
+
+        footer {
+            margin-top: 20px;
+            padding: 10px 0;
+            background-color: #4CAF50;
+            color: white;
+            width: 100%;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Microfrontend Orchestrator</h1>
+    </header>
+
+    <nav>
+        <a href="#/app1">App 1</a>
+        <a href="#/app2">App 2</a>
+        <a href="#/app3">App 3</a>
+        <a href="#/app4">App 4</a>
+        <a href="#/app5">App 5</a>
+        <a href="#/app6">App 6</a>
+        <a href="#/app7">App 7</a>
+        <a href="#/app8">App 8</a>
+        <a href="#/app9">App 9</a>
+        <a href="#/app10">App 10</a>
+    </nav>
+
+    <div class="content">
+        <!-- Placeholder for the App content -->
+        <app-component>
+            <!-- The selected app's content will be rendered here -->
+        </app-component>
+    </div>
+
+    <footer>
+        <p>Powered by Microfrontend Architecture</p>
+    </footer>
+
+</body>
+</html>
+ 
