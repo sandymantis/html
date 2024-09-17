@@ -37,10 +37,6 @@ export default function SSRPage({ initialFact }) {
   );
 }
 
-
-
-
-
 // pages/ssr.js
 import { useState } from 'react';
 
@@ -106,4 +102,17 @@ const styles = {
     padding: '15px',
     marginBottom: '10px',
     borderRadius: '5px',
-    boxShadow: '0 2px 4px rgba(0
+    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+    fontSize: '18px',
+  },
+  button: {
+    backgroundColor: '#0070f3',
+    color: '#fff',
+    border: 'none',
+    padding: '10px 20px',
+    fontSize: '16px',
+    cursor: 'pointer',
+    borderRadius: '5px',
+    marginTop: '20px',
+  },
+};
