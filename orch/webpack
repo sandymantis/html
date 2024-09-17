@@ -19,3 +19,48 @@ module.exports = {
     ]
   }
 };
+
+
+
+import React from 'react';
+
+const App = () => {
+  return (
+    <div>
+      <h1>Hello, React SSR!</h1>
+    </div>
+  );
+};
+
+export default App;
+
+
+
+
+
+import express from 'express';
+import React from 'react';
+import { renderToString } from 'react-dom/server';
+import App from './App';
+
+const app = express();
+
+app.get('/', (req, res) => {
+  const content = renderToString(<App />);
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>React SSR Example</title>
+      </head>
+      <body>
+        <div id="root">${content}</div>
+      </body>
+    </html>
+  `;
+  res.send(html);
+});
+
+app.listen(3000, () => {
+  console.log('Server is running on port 3000');
+});
