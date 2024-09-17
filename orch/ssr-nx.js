@@ -3,11 +3,11 @@ import { useState } from 'react';
 
 export async function getServerSideProps() {
   // Fetch data from the Dog Facts API on the server side
-  const res = await fetch('https://dog-facts-api.herokuapp.com/api/v1/resources/dogs/all');
+  const res = await fetch('https://dog-api.kinduff.com/api/facts?number=4');
   const data = await res.json();
 
   // Select a random fact from the data
-  const randomFact = data[Math.floor(Math.random() * data.length)];
+  const randomFact = data.facts[Math.floor(Math.random() * data.facts.length)];
 
   return {
     props: {
@@ -22,16 +22,16 @@ export default function SSRPage({ initialFact }) {
 
   // Function to fetch a new random dog fact
   const fetchNewFact = async () => {
-    const res = await fetch('https://dog-facts-api.herokuapp.com/api/v1/resources/dogs/all');
+    const res = await fetch('https://dog-api.kinduff.com/api/facts?number=4');
     const data = await res.json();
-    const randomFact = data[Math.floor(Math.random() * data.length)];
+    const randomFact = data.facts[Math.floor(Math.random() * data.facts.length)];
     setFact(randomFact); // Update the state with the new fact
   };
 
   return (
     <div>
       <h1>Server-Side Rendered Dog Fact</h1>
-      <p>{fact.fact}</p>
+      <p>{fact}</p>
       <button onClick={fetchNewFact}>Get Another Dog Fact</button>
     </div>
   );
