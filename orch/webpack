@@ -64,3 +64,9 @@ app.get('/', (req, res) => {
 app.listen(3000, () => {
   console.log('Server is running on port 3000');
 });
+
+
+
+npm install react react-dom express
+npm install --save-dev @babel/core @babel/preset-env @babel/preset-react babel-loader webpack webpack-cli webpack-node-externals
+
