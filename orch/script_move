@@ -1,0 +1,43 @@
+// Server address where your Next.js app is running
+const NEXT_JS_SERVER_URL = 'https://server-b.com';
+
+// This function will move <script> tags from <head> to <body> or elsewhere in the DOM
+// It will also update the src attribute to include the server URL.
+function moveAndUpdateScriptsFromHead() {
+  // Select all <script> elements from the <head>
+  const scripts = document.head.querySelectorAll('script');
+
+  // Target location to append the scripts to (could be <body> or a specific <div>)
+  const target = document.body || document.getElementById('my-custom-root');
+
+  // Loop through each script and move it to the target
+  scripts.forEach((script) => {
+    // Create a new <script> element
+    const newScript = document.createElement('script');
+
+    // Copy the attributes of the original <script> to the new one
+    Array.from(script.attributes).forEach(attr => {
+      if (attr.name === 'src' && attr.value && !attr.value.startsWith('http')) {
+        // If the src is relative, prepend the Next.js server URL
+        newScript.setAttribute('src', `${NEXT_JS_SERVER_URL}${attr.value}`);
+      } else {
+        // Otherwise, copy the attribute as is
+        newScript.setAttribute(attr.name, attr.value);
+      }
+    });
+
+    // Copy inline script content, if any
+    if (script.textContent) {
+      newScript.textContent = script.textContent;
+    }
+
+    // Append the new script to the target (e.g., <body>)
+    target.appendChild(newScript);
+
+    // Remove the old script from the <head>
+    script.remove();
+  });
+}
+
+// After the HTML is loaded in your Orchestrator, call this function
+moveAndUpdateScriptsFromHead();
