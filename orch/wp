@@ -1,0 +1,67 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Webpack Project</title>
+</head>
+<body>
+    <h1>Simple Webpack Project</h1>
+    <button onclick="sayHello()">Say Hello</button>
+    <button onclick="addNumbers(3, 4)">Add Numbers</button>
+    <button onclick="multiplyNumbers(5, 6)">Multiply Numbers</button>
+
+    <!-- Script tag to include the bundled JavaScript (adjust after Webpack setup) -->
+    <script src="dist/bundle.js"></script>
+</body>
+</html>
+
+
+// file1.js
+export function sayHello() {
+    alert('Hello from File 1!');
+}
+
+
+// file2.js
+export function addNumbers(a, b) {
+    alert(`The sum is: ${a + b}`);
+}
+
+
+// file3.js
+export function multiplyNumbers(a, b) {
+    alert(`The product is: ${a * b}`);
+}
+
+
+// webpack.config.js
+const path = require('path');
+
+module.exports = {
+    entry: './src/file1.js', // Entry point, it can be any of the files; Webpack will resolve dependencies.
+    output: {
+        filename: 'bundle.js', // Output bundle name
+        path: path.resolve(__dirname, 'dist'), // Output directory
+    },
+    mode: 'development', // Set to 'production' for minified output
+};
+
+
+
+
+{
+  "name": "simple-webpack-project",
+  "version": "1.0.0",
+  "description": "A simple project to demonstrate Webpack bundling.",
+  "main": "index.js",
+  "scripts": {
+    "build": "webpack"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "webpack": "^5.0.0",
+    "webpack-cli": "^4.0.0"
+  }
+}
