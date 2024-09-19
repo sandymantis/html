@@ -1,0 +1,72 @@
+// BaseClass.js
+export default class BaseClass {
+  constructor() {
+    if (this.constructor === BaseClass) {
+      throw new Error("Abstract classes can't be instantiated.");
+    }
+  }
+
+  // Method declarations (like an interface)
+  methodOne() {
+    throw new Error("Method 'methodOne()' must be implemented.");
+  }
+
+  methodTwo() {
+    throw new Error("Method 'methodTwo()' must be implemented.");
+  }
+}
+
+
+
+// ExtendedClass.js
+import BaseClass from './BaseClass.js';
+
+export default class ExtendedClass extends BaseClass {
+  constructor() {
+    super(); // Call the parent class constructor
+  }
+
+  // Implement the methods declared in the BaseClass
+  methodOne() {
+    console.log('Method One is implemented.');
+  }
+
+  methodTwo() {
+    console.log('Method Two is implemented.');
+  }
+}
+
+
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dynamic Import Example</title>
+</head>
+<body>
+  <h1>JavaScript Dynamic Import Example</h1>
+  <button id="callMethods">Call Methods</button>
+
+  <script type="module">
+    document.getElementById('callMethods').addEventListener('click', async () => {
+      try {
+        // Dynamically import the ExtendedClass module
+        const { default: ExtendedClass } = await import('./ExtendedClass.js');
+
+        // Instantiate the imported class
+        const myObject = new ExtendedClass();
+
+        // Call the implemented methods
+        myObject.methodOne();
+        myObject.methodTwo();
+      } catch (error) {
+        console.error('Error loading the ExtendedClass:', error);
+      }
+    });
+  </script>
+</body>
+</html>
+
