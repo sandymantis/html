@@ -1,0 +1,45 @@
+// main.js
+
+console.log('Main.js is loaded and running');
+
+// Simulating a function that requires additional code at runtime
+async function loadDynamicChunk() {
+  console.log('Attempting to dynamically import chunk.js...');
+
+  try {
+    // Dynamically importing chunk.js
+    const chunkModule = await import('./chunk.js'); // Adjust path if necessary
+
+    // Using the imported module
+    chunkModule.runChunkFunction(); // Assume chunk.js exports a function called runChunkFunction
+    console.log('Dynamic import of chunk.js was successful');
+  } catch (error) {
+    console.error('Failed to dynamically import chunk.js:', error);
+  }
+}
+
+// Triggering the dynamic import
+document.getElementById('loadChunkButton').addEventListener('click', loadDynamicChunk);
+
+
+
+
+// chunk.js
+
+export function runChunkFunction() {
+  console.log('Chunk.js is dynamically loaded and running!');
+}
+
+
+<!-- HTML in Orchestrator’s DOM -->
+<html>
+  <head>
+    <title>Orchestrator with Next.js Script</title>
+  </head>
+  <body>
+    <h1>Orchestrator Page</h1>
+    <div id="nextjs-container"></div>
+    <button id="loadChunkButton">Load Chunk</button>
+    <script src="http://localhost:3000/main.js"></script> <!-- Assuming main.js served from Next.js server -->
+  </body>
+</html>
