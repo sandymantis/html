@@ -118,3 +118,28 @@ root.render(<App posts={window.__INITIAL_DATA__ || []} />);
 
 
 npx babel-node src/server.js --presets @babel/preset-env,@babel/preset-react
+
+
+
+{
+  "name": "react-ssr-app",
+  "version": "1.0.0",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "node-fetch": "^3.0.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.16.0",
+    "@babel/node": "^7.16.0",
+    "@babel/preset-env": "^7.16.0",
+    "@babel/preset-react": "^7.16.0"
+  }
+}
+
