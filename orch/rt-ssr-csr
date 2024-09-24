@@ -10,3 +10,40 @@
 {
   "presets": ["@babel/preset-env", "@babel/preset-react"]
 }
+
+
+// server.js
+import express from 'express';
+import { renderToString } from 'react-dom/server';
+import React from 'react';
+import App from './src/App';
+
+const app = express();
+
+// Serve static files
+app.use(express.static('public'));
+
+app.get('/', (req, res) => {
+  // Render the React app to a string
+  const html = renderToString(<App />);
+
+  // Send the initial HTML with SSR content
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>React SSR CSR</title>
+      </head>
+      <body>
+        <div id="root">${html}</div>
+        <script src="/bundle.js" type="module"></script>
+      </body>
+    </html>
+  `);
+});
+
+app.listen(3000, () => {
+  console.log('Server is running on http://localhost:3000');
+});
