@@ -1,85 +1,13 @@
-// server.js
-import express from 'express';
-import { renderToString } from 'react-dom/server';
-import React from 'react';
-import App from './src/App'; // Import the App component
-import fetch from 'node-fetch'; // Use node-fetch to make server-side API calls
-
-const app = express();
-
-// Define the route that handles rendering
-app.get('/', async (req, res) => {
-  // Fetch the joke data from the API on the server side
-  const joke = await fetch('https://official-joke-api.appspot.com/random_joke')
-    .then(response => response.json())
-    .catch(error => {
-      console.error('Error fetching joke:', error);
-      return null; // Handle error gracefully
-    });
-
-  // Render the React component to a string, passing the joke as a prop
-  const html = renderToString(<App joke={joke} />);
-
-  // Send the rendered HTML as the initial response
-  res.send(`
-    <!DOCTYPE html>
-    <html lang="en">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>React SSR with CSR Hydration</title>
-      </head>
-      <body>
-        <div id="root">${html}</div>
-        <script src="/bundle.js" type="module"></script>
-      </body>
-    </html>
-  `);
-});
-
-// Start the server on port 3000
-app.listen(3000, () => {
-  console.log('Server is running on http://localhost:3000');
-});
+npm init -y
 
 
+npm install --save-dev @babel/core @babel/cli @babel/preset-env @babel/preset-react @babel/register
 
-// src/App.js
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 
-const App = ({ joke: initialJoke }) => {
-  const [joke, setJoke] = useState(initialJoke);
-  const [isClientSide, setIsClientSide] = useState(false);
+npm install node-fetch
 
-  // Client-side fetching triggered by the button
-  const fetchClientSideJoke = () => {
-    setIsClientSide(true);
-    axios
-      .get('https://official-joke-api.appspot.com/random_joke')
-      .then((response) => setJoke(response.data))
-      .catch((error) => console.error('Error fetching joke:', error));
-  };
 
-  return (
-    <div>
-      <h1>React SSR with CSR Hydration</h1>
-      <button onClick={fetchClientSideJoke}>Fetch Joke Client-Side</button>
-      {joke ? (
-        <div>
-          <p>
-            <strong>Setup:</strong> {joke.setup}
-          </p>
-          <p>
-            <strong>Punchline:</strong> {joke.punchline}
-          </p>
-        </div>
-      ) : (
-        <p>Loading joke...</p>
-      )}
-      {isClientSide && <p>Joke fetched on the client side.</p>}
-    </div>
-  );
-};
+npm install --save-dev webpack webpack-cli babel-loader
 
-export default App;
+
+npm install --save-dev nodemon
