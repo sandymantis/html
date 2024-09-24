@@ -56,38 +56,45 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 const App = () => {
-  const [data, setData] = useState(null);
+  const [joke, setJoke] = useState(null);
   const [isClientSide, setIsClientSide] = useState(false);
 
-  // Fetch data initially (server-side rendered)
+  // Fetch a joke initially (server-side rendered)
   useEffect(() => {
-    axios.get('https://api.publicapis.org/entries')
-      .then(response => setData(response.data.entries))
-      .catch(error => console.error('Error fetching data:', error));
+    fetchJoke();
   }, []);
 
-  // Fetch data client-side when button is clicked
-  const fetchClientSideData = () => {
+  // Function to fetch a joke from the API
+  const fetchJoke = () => {
+    axios
+      .get('https://official-joke-api.appspot.com/random_joke')
+      .then((response) => setJoke(response.data))
+      .catch((error) => console.error('Error fetching joke:', error));
+  };
+
+  // Fetch a joke client-side when the button is clicked
+  const fetchClientSideJoke = () => {
     setIsClientSide(true);
-    axios.get('https://api.publicapis.org/entries')
-      .then(response => setData(response.data.entries))
-      .catch(error => console.error('Error fetching data:', error));
+    fetchJoke();
   };
 
   return (
     <div>
       <h1>React SSR with CSR Hydration</h1>
-      <button onClick={fetchClientSideData}>Fetch Data Client-Side</button>
-      {data ? (
-        <ul>
-          {data.map((entry, index) => (
-            <li key={index}>{entry.API} - {entry.Description}</li>
-          ))}
-        </ul>
+      <button onClick={fetchClientSideJoke}>Fetch Joke Client-Side</button>
+      {joke ? (
+        <div>
+          <p>
+            <strong>Setup:</strong> {joke.setup}
+          </p>
+          <p>
+            <strong>Punchline:</strong> {joke.punchline}
+          </p>
+        </div>
       ) : (
-        <p>Loading...</p>
+        <p>Loading joke...</p>
       )}
-      {isClientSide && <p>Data fetched on the client side.</p>}
+      {isClientSide && <p>Joke fetched on the client side.</p>}
     </div>
   );
 };
