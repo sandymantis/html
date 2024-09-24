@@ -153,3 +153,44 @@ export default {
   ],
 };
 
+
+
+async function loadContentIntoIframe(url, iframeId = 'content-iframe', targetSelector = '#orchestrator-container') {
+  try {
+    // Fetch HTML content from the provided URL
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch content from ${url}: ${response.statusText}`);
+    }
+
+    const htmlContent = await response.text();
+
+    // Create a new iframe element
+    const iframe = document.createElement('iframe');
+    iframe.id = iframeId;
+    iframe.style.width = '100%';
+    iframe.style.height = '100%';
+    iframe.style.border = 'none'; // Customize styling as needed
+
+    // Insert the iframe into the target container
+    const targetElement = document.querySelector(targetSelector);
+    if (!targetElement) {
+      throw new Error(`Target container not found for selector: ${targetSelector}`);
+    }
+
+    targetElement.appendChild(iframe);
+
+    // Write the fetched HTML content into the iframe
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+    iframeDoc.open();
+    iframeDoc.write(htmlContent);
+    iframeDoc.close();
+  } catch (error) {
+    console.error('Error loading content into iframe:', error);
+  }
+}
+
+// Example usage
+loadContentIntoIframe('https://example.com/page', 'my-iframe', '#orchestrator');
+
+
