@@ -138,3 +138,18 @@ export default {
   },
 };
 
+
+
+// babel.config.js
+export default {
+  presets: [
+    [
+      '@babel/preset-env',
+      {
+        modules: false, // Keeps ES6 module syntax
+      },
+    ],
+    '@babel/preset-react',
+  ],
+};
+
