@@ -1,0 +1,37 @@
+import { registerApplication, start } from 'single-spa';
+
+// Register the application with inline lifecycle functions
+registerApplication({
+  name: 'inline-app', // Name of the application
+  app: () => {
+    // Inline lifecycle functions
+    return {
+      bootstrap: async () => {
+        console.log('Inline app bootstrap');
+      },
+      mount: async () => {
+        console.log('Inline app mount');
+        // Example: Create and append a DOM element when mounted
+        const container = document.getElementById('single-spa-root');
+        if (container) {
+          const appElement = document.createElement('div');
+          appElement.id = 'inline-app';
+          appElement.innerHTML = '<h1>Inline App Mounted</h1>';
+          container.appendChild(appElement);
+        }
+      },
+      unmount: async () => {
+        console.log('Inline app unmount');
+        // Remove the app element from the DOM
+        const appElement = document.getElementById('inline-app');
+        if (appElement) {
+          appElement.remove();
+        }
+      },
+    };
+  },
+  activeWhen: (location) => location.pathname === '/inline', // Activate on /inline route
+});
+
+// Start Single-SPA
+start();
