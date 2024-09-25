@@ -1,37 +1,57 @@
-import { registerApplication, start } from 'single-spa';
-
-// Register the application with inline lifecycle functions
-registerApplication({
-  name: 'inline-app', // Name of the application
-  app: () => {
-    // Inline lifecycle functions
-    return {
-      bootstrap: async () => {
-        console.log('Inline app bootstrap');
-      },
-      mount: async () => {
-        console.log('Inline app mount');
-        // Example: Create and append a DOM element when mounted
-        const container = document.getElementById('single-spa-root');
-        if (container) {
-          const appElement = document.createElement('div');
-          appElement.id = 'inline-app';
-          appElement.innerHTML = '<h1>Inline App Mounted</h1>';
-          container.appendChild(appElement);
-        }
-      },
-      unmount: async () => {
-        console.log('Inline app unmount');
-        // Remove the app element from the DOM
-        const appElement = document.getElementById('inline-app');
-        if (appElement) {
-          appElement.remove();
-        }
-      },
-    };
+// Define lifecycle functions for inline-app1
+export const app1Lifecycle = {
+  bootstrap: () => {
+    console.log('Inline App 1 bootstrap');
+    return Promise.resolve();
   },
-  activeWhen: (location) => location.pathname === '/inline', // Activate on /inline route
-});
+  mount: () => {
+    console.log('Inline App 1 mount');
+    // Append content to the DOM
+    const container = document.getElementById('single-spa-root');
+    if (container) {
+      const appElement = document.createElement('div');
+      appElement.id = 'inline-app1';
+      appElement.innerHTML = '<h1>Inline App 1 Mounted</h1>';
+      container.appendChild(appElement);
+    }
+    return Promise.resolve();
+  },
+  unmount: () => {
+    console.log('Inline App 1 unmount');
+    // Remove the app element from the DOM
+    const appElement = document.getElementById('inline-app1');
+    if (appElement) {
+      appElement.remove();
+    }
+    return Promise.resolve();
+  },
+};
 
-// Start Single-SPA
-start();
+// Define lifecycle functions for inline-app2
+export const app2Lifecycle = {
+  bootstrap: () => {
+    console.log('Inline App 2 bootstrap');
+    return Promise.resolve();
+  },
+  mount: () => {
+    console.log('Inline App 2 mount');
+    // Append content to the DOM
+    const container = document.getElementById('single-spa-root');
+    if (container) {
+      const appElement = document.createElement('div');
+      appElement.id = 'inline-app2';
+      appElement.innerHTML = '<h1>Inline App 2 Mounted</h1>';
+      container.appendChild(appElement);
+    }
+    return Promise.resolve();
+  },
+  unmount: () => {
+    console.log('Inline App 2 unmount');
+    // Remove the app element from the DOM
+    const appElement = document.getElementById('inline-app2');
+    if (appElement) {
+      appElement.remove();
+    }
+    return Promise.resolve();
+  },
+};
