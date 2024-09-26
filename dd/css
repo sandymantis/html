@@ -1,0 +1,43 @@
+/* styles.css */
+body {
+    display: flex;
+    height: 100vh;
+    margin: 0;
+    font-family: Arial, sans-serif;
+}
+
+.toolbar {
+    width: 200px;
+    padding: 10px;
+    background-color: #f8f8f8;
+    border-right: 1px solid #ddd;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.canvas {
+    flex: 1;
+    padding: 10px;
+    position: relative;
+    border: 1px dashed #ccc;
+}
+
+.draggable {
+    padding: 10px;
+    border: 1px solid #ccc;
+    background-color: #e0e0e0;
+    cursor: grab;
+    display: inline-block;
+}
+
+.draggable:active {
+    cursor: grabbing;
+}
+
+.canvas .dropped {
+    position: absolute;
+    border: 1px solid #aaa;
+    padding: 10px;
+    background-color: #f0f0f0;
+}
