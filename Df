@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple Drawflow Example</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/drawflow/0.0.44/drawflow.min.css">
+  <style>
+    #drawflow {
+      width: 100%;
+      height: 100vh;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="drawflow"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/drawflow/0.0.44/drawflow.min.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      // Initialize Drawflow editor
+      const editor = new Drawflow(document.getElementById('drawflow'));
+      editor.start();
+
+      // Add two boxes (nodes) to the editor
+      const box1 = {
+        name: 'Box 1',
+        data: {},
+        class: 'box',
+        html: '<div><strong>Box 1</strong></div>',
+        inputs: 0, // no input connection
+        outputs: 1 // one output connection
+      };
+      
+      const box2 = {
+        name: 'Box 2',
+        data: {},
+        class: 'box',
+        html: '<div><strong>Box 2</strong></div>',
+        inputs: 1, // one input connection
+        outputs: 0 // no output connection
+      };
+
+      // Position and create the two boxes (nodes)
+      const nodeId1 = editor.addNode('box1', 1, 0, 100, 100, 'box1', box1.data, box1.html);
+      const nodeId2 = editor.addNode('box2', 0, 1, 400, 100, 'box2', box2.data, box2.html);
+
+      // Connect Box 1's output to Box 2's input
+      editor.addConnection(nodeId1, nodeId2, 'output_1', 'input_1');
+    });
+  </script>
+
+</body>
+</html>
