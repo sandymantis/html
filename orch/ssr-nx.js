@@ -1,15 +1,40 @@
- <script>
-    // Get the current timestamp (datetime)
-    const cacheBust = new Date().getTime(); // Generates a unique value based on the current timestamp
-    
-    // Create a new script element
-    const script = document.createElement('script');
-    
-    // Add the script src with cache busting
-    script.src = './shell.js?cacheBust=' + cacheBust;
-    
-    // Append the script element to the body to execute it
-    document.body.appendChild(script);
+async function loadHTML(url) {
+  try {
+    const response = await fetch(url);
+    const htmlString = await response.text();
 
-    console.log('Shell script loaded with cache bust:', script.src);
-  </script>
+    // Create a DOM parser
+    const parser = new DOMParser();
+    const fetchedDocument = parser.parseFromString(htmlString, "text/html");
+
+    // Get current document's head and body
+    const currentHead = document.head;
+    const currentBody = document.body;
+
+    // Get fetched document's head and body
+    const fetchedHead = fetchedDocument.head;
+    const fetchedBody = fetchedDocument.body;
+
+    // Replace current head content but remove all script tags first
+    currentHead.innerHTML = fetchedHead.innerHTML;
+    currentHead.querySelectorAll('script').forEach(script => script.remove());
+
+    // Replace current body content
+    currentBody.innerHTML = fetchedBody.innerHTML;
+
+    // Get all scripts from fetched document
+    const scripts = fetchedDocument.querySelectorAll('script');
+
+    // Append each script as a new script tag to the current head
+    scripts.forEach(fetchedScript => {
+      const newScript = document.createElement('script');
+      newScript.src = fetchedScript.src;
+      newScript.textContent = fetchedScript.textContent;
+      currentHead.appendChild(newScript);
+    });
+  } catch (error) {
+    console.error("Error fetching or processing HTML:", error);
+  }
+}
+
+loadHTML('https://example.com/page'); // Replace with your target URL
