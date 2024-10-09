@@ -12,8 +12,7 @@ async function loadHTML(url) {
     const currentBody = document.body;
 Here’s a summary of your message to the team, highlighting the need for a cultural shift, while maintaining a positive and constructive tone:
 
----In addition to tool selection, I’ve also observed that sometimes we are quick to jump into problem-solving—whether with tools or other methods—before the architecture is fully thought through. While solving problems quickly is important, doing so without a solid architectural understanding in place often results in technical debt, misaligned solutions, and the need for future rework. By taking the time to carefully consider the architecture before addressing immediate problems, we can avoid these pitfalls and create more robust, long-lasting solutions.
-=
+\=
 ---
 
 This version of the message should help communicate your position clearly, while emphasizing collaboration and the benefits of shifting focus. Let me know if you need any adjustments!
