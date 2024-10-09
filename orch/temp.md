@@ -21,6 +21,17 @@
 
 **Deliverables**:
 - **CSS Variables/SCSS (for Web)**: Converts tokens into CSS variables to be used in stylesheets.
+
+- {
+  "colorPrimary": "#FF5733",
+  "colorSecondary": "#33C1FF",
+  "fontSizeSmall": "12px",
+  "fontSizeLarge": "24px",
+  "spacingSmall": "8px",
+  "spacingLarge": "24px",
+  "fontFamily": "Roboto, sans-serif"
+}
+
   - _Example_: `:root { --color-primary: #FF5733; }`
 - **Platform-Specific Token Files**:
   - _For Android_: XML token file (e.g., `<color name="colorPrimary">#FF5733</color>`).
