@@ -1,0 +1,7 @@
+AI Studio is a platform that helps you create and publish machine learning models, with flexibility in cloud infrastructure and two key sets of SDKs:
+
+	1.	Configuring Data: AI Studio allows you to define and access enterprise data through a specific set of SDKs, based on data usage rights. These SDKs provide access to the data necessary for model training.
+	2.	Training the Model: Once you have access to the data, model training and evaluation occur within the cloud infrastructure (such as Azure, Google Cloud, or AWS). The compute infrastructure is data-agnostic, meaning it can be swapped between different cloud providers.
+	3.	Publishing the Model: After the model is trained, AI Studio provides another set of SDKs to help publish the model. This process triggers a responsible AI review workflow, ensuring ethical use before the model is finalized. Once approved, the model is made available via an API endpoint, possibly through a catalog for easy access.
+
+In summary, AI Studio handles end-to-end machine learning model creation by provisioning SDKs for data access and model publishing, ensuring flexibility in cloud infrastructure and compliance with responsible AI practices.
