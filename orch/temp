@@ -12,3 +12,39 @@ function reloadSSRAppScripts() {
         }
     });
 }
+
+
+// Function to reload the script elements after saving their data
+function reloadScripts() {
+    const scriptData = [];
+
+    // Collect all script data before removing the scripts
+    document.querySelectorAll('script').forEach(oldScript => {
+        if (oldScript.src) {
+            scriptData.push({ src: oldScript.src }); // Save the script src
+        } else {
+            scriptData.push({ inline: oldScript.textContent }); // Save inline script content
+        }
+    });
+
+    // Remove old scripts from the document
+    document.querySelectorAll('script').forEach(oldScript => oldScript.remove());
+
+    // Recreate and append new script tags using the saved data
+    scriptData.forEach(data => {
+        const newScript = document.createElement('script');
+        if (data.src) {
+            // If it's an external script, add the cache-busting parameter
+            newScript.src = data.src + '?timestamp=' + new Date().getTime();
+        } else if (data.inline) {
+            // If it's an inline script, copy its content
+            newScript.textContent = data.inline;
+        }
+        document.body.appendChild(newScript); // Append the new script to the DOM
+    });
+}
+
+// After document.write(), clean up and reload the scripts
+document.write(...);  // Your SSR content
+document.close();
+reloadScripts();       // Reload scripts with saved data
