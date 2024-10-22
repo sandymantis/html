@@ -48,3 +48,20 @@ function reloadScripts() {
 document.write(...);  // Your SSR content
 document.close();
 reloadScripts();       // Reload scripts with saved data
+
+
+// Inside the web component
+shadowRoot.addEventListener('click', (event) => {
+  const link = event.target.closest('a');
+  if (link) {
+    event.preventDefault();
+    // Dispatch the event with composed: true to allow it to propagate outside the shadow DOM
+    link.dispatchEvent(
+      new CustomEvent('link-click', {
+        bubbles: true,
+        composed: true, // This allows the event to propagate outside shadow DOM
+      })
+    );
+  }
+});
+
