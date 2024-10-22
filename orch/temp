@@ -65,3 +65,20 @@ shadowRoot.addEventListener('click', (event) => {
   }
 });
 
+
+// Inside the web component
+shadowRoot.addEventListener('click', (event) => {
+  const link = event.target.closest('a');
+  if (link) {
+    event.preventDefault();  // Prevent default navigation
+
+    // Dispatch a native `click` event on the <a> element itself
+    const clickEvent = new MouseEvent('click', {
+      bubbles: true,
+      composed: true,  // Ensures the event propagates outside the shadow DOM
+    });
+
+    link.dispatchEvent(clickEvent);  // Dispatch the event on the <a> element
+  }
+});
+
