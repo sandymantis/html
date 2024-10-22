@@ -1,0 +1,14 @@
+// Reload the scripts manually by appending them to the DOM
+function reloadSSRAppScripts() {
+    const scripts = document.querySelectorAll('script');
+    scripts.forEach(script => {
+        const newScript = document.createElement('script');
+        if (script.src) {
+            newScript.src = script.src + '?timestamp=' + new Date().getTime(); // Force re-download
+            document.body.appendChild(newScript);
+        } else {
+            newScript.textContent = script.textContent; // Handle inline scripts
+            document.body.appendChild(newScript);
+        }
+    });
+}
