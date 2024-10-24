@@ -1,4 +1,63 @@
 <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>T-Shaped Layout Example</title>
+  <style>
+    /* General body styling */
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100vh; /* Make the body take the full viewport height */
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top navigation bar */
+    .nav {
+      background-color: #333;
+      color: white;
+      text-align: center;
+      padding: 15px;
+      font-size: 20px;
+    }
+
+    /* Container for the two side-by-side divs */
+    .main-content {
+      display: flex;
+      flex: 1; /* Take up the remaining space */
+    }
+
+    /* Style for the two side-by-side divs */
+    .content-left, .content-right {
+      flex: 1;
+      padding: 20px;
+    }
+
+    /* Different background colors for demonstration */
+    .content-left {
+      background-color: #f0f0f0;
+    }
+
+    .content-right {
+      background-color: #e0e0e0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top nav bar (horizontal) -->
+  <div class="nav">Top Navigation Bar</div>
+
+  <!-- Main content area (two divs side-by-side) -->
+  <div class="main-content">
+    <div class="content-left">Left Content</div>
+    <div class="content-right">Right Content</div>
+  </div>
+
+</body>
+</html><!DOCTYPE html>
 <html>
 <head>
     <title>Custom Element Example</title>
