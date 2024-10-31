@@ -1,5 +1,220 @@
 
-// accordion-component.js
+// Define the DataTable web component
+class DataTable extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+    this._data = [];
+    this._filteredData = [];
+    this._sortColumn = null;
+    this._sortDirection = 'asc';
+  }
+
+  static get observedAttributes() {
+    return ['columns'];
+  }
+
+  connectedCallback() {
+    this.render();
+    this.addEventListeners();
+  }
+
+  set data(value) {
+    this._data = value;
+    this._filteredData = [...value];
+    this.render();
+  }
+
+  get data() {
+    return this._data;
+  }
+
+  addEventListeners() {
+    // Filter input handler
+    this.shadowRoot.querySelector('.filter-input')?.addEventListener('input', (e) => {
+      const filterValue = e.target.value.toLowerCase();
+      this._filteredData = this._data.filter(row => 
+        Object.values(row).some(value => 
+          value.toString().toLowerCase().includes(filterValue)
+        )
+      );
+      this.render();
+    });
+
+    // Sort handler for column headers
+    this.shadowRoot.querySelector('table')?.addEventListener('click', (e) => {
+      const headerCell = e.target.closest('th');
+      if (headerCell) {
+        const column = headerCell.dataset.column;
+        this.sortByColumn(column);
+      }
+    });
+  }
+
+  sortByColumn(column) {
+    if (this._sortColumn === column) {
+      this._sortDirection = this._sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this._sortColumn = column;
+      this._sortDirection = 'asc';
+    }
+
+    this._filteredData.sort((a, b) => {
+      const valueA = a[column];
+      const valueB = b[column];
+      
+      if (typeof valueA === 'string') {
+        return this._sortDirection === 'asc' 
+          ? valueA.localeCompare(valueB)
+          : valueB.localeCompare(valueA);
+      }
+      
+      return this._sortDirection === 'asc' 
+        ? valueA - valueB
+        : valueB - valueA;
+    });
+
+    this.render();
+  }
+
+  getStatusClass(status) {
+    const statusMap = {
+      'Success': 'success',
+      'Failed': 'failed',
+      'Processing': 'processing'
+    };
+    return statusMap[status] || '';
+  }
+
+  render() {
+    const style = `
+      <style>
+        :host {
+          display: block;
+          font-family: system-ui, -apple-system, sans-serif;
+        }
+        
+        .container {
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+          padding: 16px;
+        }
+
+        .header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 16px;
+        }
+
+        .filter-input {
+          padding: 8px 12px;
+          border: 1px solid #e2e8f0;
+          border-radius: 6px;
+          width: 200px;
+        }
+
+        table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+
+        th, td {
+          padding: 12px;
+          text-align: left;
+          border-bottom: 1px solid #e2e8f0;
+        }
+
+        th {
+          cursor: pointer;
+          user-select: none;
+        }
+
+        th:hover {
+          background-color: #f8fafc;
+        }
+
+        .status-cell {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .status-indicator {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+        }
+
+        .success .status-indicator {
+          background-color: #22c55e;
+        }
+
+        .failed .status-indicator {
+          background-color: #ef4444;
+        }
+
+        .processing .status-indicator {
+          background-color: #3b82f6;
+        }
+
+        .amount {
+          font-family: monospace;
+        }
+
+        .footer {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-top: 16px;
+          font-size: 14px;
+          color: #64748b;
+        }
+      </style>
+    `;
+
+    const html = `
+      <div class="container">
+        <div class="header">
+          <input type="text" class="filter-input" placeholder="Filter items...">
+        </div>
+        
+        <table>
+          <thead>
+            <tr>
+              <th data-column="status">Status</th>
+              <th data-column="email">Email</th>
+              <th data-column="amount">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${this._filteredData.map(row => `
+              <tr>
+                <td>
+                  <div class="status-cell ${this.getStatusClass(row.status)}">
+                    <span class="status-indicator"></span>
+                    ${row.status}
+                  </div>
+                </td>
+                <td>${row.email}</td>
+                <td class="amount">$${parseFloat(row.amount).toFixed(2)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        
+        <div class="footer">
+          <span>${this._filteredData.length} of ${this._data.length} row(s)</span>
+        </div>
+      </div>
+    `;
+
+    this.shadowRoot.innerHTML = style + html;
+  }
+}
+
+// Register the web component
+customElements.define('data-table', DataTable);// accordion-component.js
 class AccordionComponent extends HTMLElement {
   constructor() {
     super();
