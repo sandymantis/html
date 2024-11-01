@@ -1,3 +1,24 @@
+
+// Basic usage
+const table = document.querySelector('member-table');
+table.data = [
+  {
+    id: 1,
+    name: "John Doe",
+    email: "john@example.com",
+    status: "Active",
+    membershipType: "Premium",
+    joinDate: "2024-01-15",
+    lastActive: "2024-03-29"
+  },
+  // ... more members
+];
+
+// The table will automatically render and handle:
+// - Sorting when column headers are clicked
+// - Selection when checkboxes are clicked
+// - Pagination when buttons are clicked
+// - Page size changes when the dropdown is changed
 <style>
   :host {
     display: block;
