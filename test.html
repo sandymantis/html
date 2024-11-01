@@ -524,6 +524,203 @@ class MemberTable extends HTMLElement {
   connectedCallback() {
     this.addEventListeners();
   }
+// Add these methods to the MemberTable class
+
+addEventListeners() {
+  const bindEvents = () => {
+    // Sort headers
+    this.shadowRoot.querySelectorAll('th[data-sortable="true"]').forEach(th => {
+      th.addEventListener('click', () => {
+        const field = th.dataset.field;
+        this.handleSort(field);
+        this.dispatchEvent(new CustomEvent('sort', {
+          detail: { field, direction: this._sortDirection }
+        }));
+      });
+    });
+
+    // Row selection
+    this.shadowRoot.querySelectorAll('.row-checkbox').forEach(checkbox => {
+      checkbox.addEventListener('change', (e) => {
+        const id = parseInt(e.target.dataset.id);
+        this.handleRowSelect(id);
+        this.dispatchEvent(new CustomEvent('select', {
+          detail: { 
+            id, 
+            selected: this._selectedRows.has(id),
+            selectedRows: Array.from(this._selectedRows)
+          }
+        }));
+      });
+
+      // Row click for selection
+      const row = checkbox.closest('tr');
+      if (row) {
+        row.addEventListener('click', (e) => {
+          if (!e.target.closest('button')) { // Don't trigger on button clicks
+            const id = parseInt(checkbox.dataset.id);
+            this.handleRowSelect(id);
+            this.dispatchEvent(new CustomEvent('select', {
+              detail: { 
+                id, 
+                selected: this._selectedRows.has(id),
+                selectedRows: Array.from(this._selectedRows)
+              }
+            }));
+          }
+        });
+      }
+    });
+
+    // Select all checkbox
+    const selectAll = this.shadowRoot.querySelector('#select-all');
+    if (selectAll) {
+      selectAll.addEventListener('change', () => {
+        this.handleSelectAll();
+        this.dispatchEvent(new CustomEvent('selectAll', {
+          detail: { 
+            selectedRows: Array.from(this._selectedRows)
+          }
+        }));
+      });
+    }
+
+    // Pagination controls
+    const prevButton = this.shadowRoot.querySelector('.prev-page');
+    const nextButton = this.shadowRoot.querySelector('.next-page');
+    if (prevButton) {
+      prevButton.addEventListener('click', () => {
+        this.handlePageChange('prev');
+        this.dispatchEvent(new CustomEvent('pageChange', {
+          detail: { page: this._currentPage }
+        }));
+      });
+    }
+    if (nextButton) {
+      nextButton.addEventListener('click', () => {
+        this.handlePageChange('next');
+        this.dispatchEvent(new CustomEvent('pageChange', {
+          detail: { page: this._currentPage }
+        }));
+      });
+    }
+
+    // Page size selector
+    const pageSizeSelect = this.shadowRoot.querySelector('.page-size-select');
+    if (pageSizeSelect) {
+      pageSizeSelect.addEventListener('change', (e) => {
+        this.handlePageSizeChange(e.target.value);
+        this.dispatchEvent(new CustomEvent('pageSizeChange', {
+          detail: { pageSize: this._pageSize }
+        }));
+      });
+    }
+
+    // Action buttons
+    this.shadowRoot.querySelectorAll('.action-button').forEach(button => {
+      button.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const memberId = parseInt(button.dataset.memberId);
+        const member = this._data.find(m => m.id === memberId);
+        if (member) {
+          // Show dropdown menu
+          const menu = this.createActionMenu(member);
+          this.showActionMenu(menu, button);
+        }
+      });
+    });
+
+    // Close action menu when clicking outside
+    document.addEventListener('click', (e) => {
+      const menu = this.shadowRoot.querySelector('.action-menu');
+      if (menu && !menu.contains(e.target)) {
+        menu.remove();
+      }
+    });
+  };
+
+  bindEvents();
+  this._bindEvents = bindEvents;
+}
+
+createActionMenu(member) {
+  const menu = document.createElement('div');
+  menu.className = 'action-menu';
+  menu.innerHTML = `
+    <div class="action-menu-content">
+      <button class="action-menu-item" data-action="view">
+        ${this.getViewIcon()} View Details
+      </button>
+      <button class="action-menu-item" data-action="edit">
+        ${this.getEditIcon()} Edit Member
+      </button>
+      <button class="action-menu-item" data-action="email">
+        ${this.getEmailIcon()} Send Email
+      </button>
+      <hr class="action-menu-divider">
+      <button class="action-menu-item text-red-600" data-action="delete">
+        ${this.getDeleteIcon()} Remove Member
+      </button>
+    </div>
+  `;
+
+  // Add event listeners to menu items
+  menu.querySelectorAll('.action-menu-item').forEach(item => {
+    item.addEventListener('click', (e) => {
+      const action = e.currentTarget.dataset.action;
+      this.dispatchEvent(new CustomEvent('action', {
+        detail: { action, member }
+      }));
+      menu.remove();
+    });
+  });
+
+  return menu;
+}
+
+showActionMenu(menu, button) {
+  // Remove any existing menus
+  this.shadowRoot.querySelectorAll('.action-menu').forEach(m => m.remove());
+
+  // Position the menu
+  const rect = button.getBoundingClientRect();
+  menu.style.position = 'absolute';
+  menu.style.top = `${rect.bottom + window.scrollY + 5}px`;
+  menu.style.right = `${window.innerWidth - rect.right}px`;
+  
+  this.shadowRoot.appendChild(menu);
+}
+
+// Helper method to get icon SVGs
+getViewIcon() {
+  return `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+    <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+  </svg>`;
+}
+
+getEditIcon() {
+  return `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+  </svg>`;
+}
+
+getEmailIcon() {
+  return `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+  </svg>`;
+}
+
+getDeleteIcon() {
+  return `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+  </svg>`;
+}
+
+render() {
+  // Use the template from previous reply here
+  // This method stays the same as before
+}
 }
 
 customElements.define('member-table', MemberTable);
