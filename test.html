@@ -1,81 +1,52 @@
-// Example with different data structure
-const table = document.querySelector('data-table');
-
-// Will automatically create columns for all fields
-table.data = [
-  {
-    id: 1,
-    userName: "john_doe",
-    lastLoginDate: "2024-01-15",
-    isActive: true,
-    accountBalance: 1234.56,
-    status: "Active"
-  },
-  {
-    id: 2,
-    userName: "jane_smith",
-    lastLoginDate: "2024-01-20",
-    isActive: false,
-    accountBalance: 789.12,
-    status: "Pending"
-  }
-];
-
-// Or your original data structure
-table.data = [
-  { status: 'Success', email: 'ken99@yahoo.com', amount: 316.00 },
-  { status: 'Failed', email: 'carmella@hotmail.com', amount: 721.00 }
-];
-
-class DataTable extends HTMLElement {
+class MemberSearch extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
-    this._data = [];
-    this._filteredData = [];
-    this._sortColumn = null;
-    this._sortDirection = 'asc';
-    this._columns = [];
+    
+    // Internal state
+    this._searchText = '';
+    this._activeFilters = new Set();
+    this._showFilterMenu = false;
+    this._suggestions = [];
+    
+    // Common filters
+    this._commonFilters = [
+      { id: 'active', label: 'Active Members' },
+      { id: 'new', label: 'New Members' },
+      { id: 'premium', label: 'Premium' },
+      { id: 'trial', label: 'Trial' },
+      { id: 'expired', label: 'Expired' }
+    ];
+
     this.render();
   }
 
   static get observedAttributes() {
-    return ['data'];
+    return ['placeholder'];
   }
 
-  get data() {
-    return this._data;
-  }
-
-  set data(newData) {
-    if (Array.isArray(newData)) {
-      this._data = [...newData];
-      this._filteredData = [...newData];
-      // Extract columns from the first data item
-      if (newData.length > 0) {
-        this._columns = Object.keys(newData[0]);
-      }
-      this.setAttribute('data', JSON.stringify(newData));
-      this.render();
+  // Parse search text for NLP-like suggestions
+  parseSearchText(text) {
+    const suggestions = [];
+    
+    if (text.toLowerCase().includes('member since')) {
+      suggestions.push('Search by join date');
     }
-  }
-
-  attributeChangedCallback(name, oldValue, newValue) {
-    if (name === 'data' && oldValue !== newValue) {
-      try {
-        const parsedData = JSON.parse(newValue);
-        if (Array.isArray(parsedData)) {
-          this._data = parsedData;
-          this._filteredData = [...parsedData];
-          if (parsedData.length > 0) {
-            this._columns = Object.keys(parsedData[0]);
-          }
-          this.render();
-        }
-      } catch (e) {
-        console.error('Invalid data provided to data-table');
-      }
+    if (text.toLowerCase().includes('paid') || text.toLowerCase().includes('payment')) {
+      suggestions.push('Search payment history');
     }
+    if (text.toLowerCase().includes('active') || text.toLowerCase().includes('status')) {
+      suggestions.push('Search by member status');
+    }
+    if (text.match(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/)) {
+      suggestions.push('Search by email');
+    }
+    if (text.match(/\b\d{3}[-.]?\d{3}[-.]?\d{4}\b/)) {
+      suggestions.push('Search by phone number');
+    }
+
+    this._suggestions = suggestions;
+    this.render();
   }
 
   connectedCallback() {
@@ -84,299 +55,351 @@ class DataTable extends HTMLElement {
 
   addEventListeners() {
     const bindEvents = () => {
-      const filterInput = this.shadowRoot.querySelector('.filter-input');
-      if (filterInput) {
-        filterInput.addEventListener('input', (e) => {
-          const filterValue = e.target.value.toLowerCase();
-          this._filteredData = this._data.filter(row => 
-            Object.values(row).some(value => 
-              String(value).toLowerCase().includes(filterValue)
-            )
-          );
+      // Search input handler
+      const searchInput = this.shadowRoot.querySelector('.search-input');
+      if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+          this._searchText = e.target.value;
+          this.parseSearchText(this._searchText);
+          this.dispatchEvent(new CustomEvent('search', {
+            detail: { text: this._searchText, filters: Array.from(this._activeFilters) }
+          }));
+        });
+      }
+
+      // Clear button
+      const clearBtn = this.shadowRoot.querySelector('.clear-btn');
+      if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+          this._searchText = '';
+          this._suggestions = [];
+          this._activeFilters.clear();
+          this.render();
+          this.dispatchEvent(new CustomEvent('clear'));
+        });
+      }
+
+      // Filter toggle button
+      const filterBtn = this.shadowRoot.querySelector('.filter-btn');
+      if (filterBtn) {
+        filterBtn.addEventListener('click', () => {
+          this._showFilterMenu = !this._showFilterMenu;
           this.render();
         });
       }
 
-      const table = this.shadowRoot.querySelector('table');
-      if (table) {
-        table.addEventListener('click', (e) => {
-          const headerCell = e.target.closest('th');
-          if (headerCell) {
-            const column = headerCell.dataset.column;
-            this.sortByColumn(column);
+      // Filter click handlers
+      const filterButtons = this.shadowRoot.querySelectorAll('.filter-option');
+      filterButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const filterId = e.target.dataset.id;
+          if (this._activeFilters.has(filterId)) {
+            this._activeFilters.delete(filterId);
+          } else {
+            this._activeFilters.add(filterId);
           }
+          this.render();
+          this.dispatchEvent(new CustomEvent('filter', {
+            detail: { filters: Array.from(this._activeFilters) }
+          }));
         });
-      }
+      });
+
+      // Suggestion click handlers
+      const suggestions = this.shadowRoot.querySelectorAll('.suggestion-item');
+      suggestions.forEach(suggestion => {
+        suggestion.addEventListener('click', (e) => {
+          this._searchText = e.target.textContent;
+          this._suggestions = [];
+          this.render();
+          this.dispatchEvent(new CustomEvent('search', {
+            detail: { text: this._searchText, filters: Array.from(this._activeFilters) }
+          }));
+        });
+      });
+
+      // Close filter menu when clicking outside
+      document.addEventListener('click', (e) => {
+        const filterMenu = this.shadowRoot.querySelector('.filter-menu');
+        const filterBtn = this.shadowRoot.querySelector('.filter-btn');
+        if (filterMenu && !filterMenu.contains(e.target) && !filterBtn.contains(e.target)) {
+          this._showFilterMenu = false;
+          this.render();
+        }
+      });
     };
 
     bindEvents();
     this._bindEvents = bindEvents;
   }
 
-  sortByColumn(column) {
-    if (this._sortColumn === column) {
-      this._sortDirection = this._sortDirection === 'asc' ? 'desc' : 'asc';
-    } else {
-      this._sortColumn = column;
-      this._sortDirection = 'asc';
-    }
-
-    this._filteredData.sort((a, b) => {
-      const valueA = a[column];
-      const valueB = b[column];
-      
-      if (typeof valueA === 'string') {
-        return this._sortDirection === 'asc' 
-          ? valueA.localeCompare(valueB)
-          : valueB.localeCompare(valueA);
-      }
-      
-      return this._sortDirection === 'asc' 
-        ? valueA - valueB
-        : valueB - valueA;
-    });
-
-    this.render();
-  }
-
-  formatValue(value, column) {
-    if (typeof value === 'number') {
-      // Format numbers with 2 decimal places
-      return value.toFixed(2);
-    }
-    
-    if (column.toLowerCase().includes('date')) {
-      // Try to format dates
-      try {
-        return new Date(value).toLocaleDateString();
-      } catch (e) {
-        return value;
-      }
-    }
-
-    if (typeof value === 'boolean') {
-      return value ? 'Yes' : 'No';
-    }
-
-    return value;
-  }
-
-  formatColumnHeader(header) {
-    // Convert camelCase or snake_case to Title Case with spaces
-    return header
-      .replace(/([A-Z])/g, ' $1') // Split camelCase
-      .replace(/_/g, ' ') // Replace underscores with spaces
-      .replace(/^./, str => str.toUpperCase()) // Capitalize first letter
-      .trim();
-  }
-
-  getStatusClass(status) {
-    if (typeof status !== 'string') return '';
-    
-    const statusMap = {
-      'success': 'success',
-      'failed': 'failed',
-      'processing': 'processing',
-      'pending': 'processing',
-      'error': 'failed',
-      'complete': 'success',
-      'completed': 'success'
-    };
-    return statusMap[status.toLowerCase()] || '';
-  }
-
   render() {
-    const style = `
+    const styles = `
       <style>
         :host {
           display: block;
           font-family: system-ui, -apple-system, sans-serif;
         }
-        
+
         .container {
-          border: 1px solid #e2e8f0;
-          border-radius: 8px;
-          padding: 16px;
-        }
-
-        .header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 16px;
-        }
-
-        .filter-input {
-          padding: 8px 12px;
-          border: 1px solid #e2e8f0;
-          border-radius: 6px;
-          width: 200px;
-        }
-
-        table {
           width: 100%;
-          border-collapse: collapse;
-          overflow-x: auto;
-          display: block;
+          max-width: 800px;
+          margin: 0 auto;
         }
 
-        th, td {
-          padding: 12px;
-          text-align: left;
-          border-bottom: 1px solid #e2e8f0;
-          min-width: 100px;
+        .search-bar {
+          position: relative;
+          margin-bottom: 1rem;
         }
 
-        td {
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          max-width: 200px;
+        .search-input {
+          width: 100%;
+          padding: 0.75rem 2.5rem;
+          border: 1px solid #e2e8f0;
+          border-radius: 0.5rem;
+          font-size: 0.875rem;
+          outline: none;
+          transition: border-color 0.2s, box-shadow 0.2s;
         }
 
-        th {
+        .search-input:focus {
+          border-color: #3b82f6;
+          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .search-icon {
+          position: absolute;
+          left: 0.75rem;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 1.25rem;
+          height: 1.25rem;
+          color: #9ca3af;
+        }
+
+        .clear-btn {
+          position: absolute;
+          right: 0.75rem;
+          top: 50%;
+          transform: translateY(-50%);
+          background: none;
+          border: none;
           cursor: pointer;
-          user-select: none;
-          background: #f8fafc;
-          position: sticky;
-          top: 0;
-        }
-
-        th:hover {
-          background-color: #f1f5f9;
-        }
-
-        .status-cell {
+          padding: 0.25rem;
+          color: #9ca3af;
           display: flex;
           align-items: center;
-          gap: 8px;
+          justify-content: center;
         }
 
-        .status-indicator {
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
+        .suggestions {
+          position: absolute;
+          top: 100%;
+          left: 0;
+          right: 0;
+          background: white;
+          border: 1px solid #e2e8f0;
+          border-radius: 0.5rem;
+          margin-top: 0.25rem;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+          z-index: 10;
         }
 
-        .success .status-indicator {
-          background-color: #22c55e;
+        .suggestion-item {
+          padding: 0.5rem 1rem;
+          cursor: pointer;
+          font-size: 0.875rem;
         }
 
-        .failed .status-indicator {
-          background-color: #ef4444;
+        .suggestion-item:hover {
+          background-color: #f3f4f6;
         }
 
-        .processing .status-indicator {
-          background-color: #3b82f6;
-        }
-
-        .number {
-          font-family: monospace;
-          text-align: right;
-        }
-
-        .footer {
+        .filters {
           display: flex;
-          justify-content: space-between;
+          flex-wrap: wrap;
+          gap: 0.5rem;
+          margin-bottom: 1rem;
+        }
+
+        .filter-btn {
+          display: flex;
           align-items: center;
-          margin-top: 16px;
-          font-size: 14px;
-          color: #64748b;
+          gap: 0.5rem;
+          padding: 0.5rem 1rem;
+          border: 1px solid #e2e8f0;
+          border-radius: 0.375rem;
+          background: white;
+          font-size: 0.875rem;
+          cursor: pointer;
         }
 
-        .sort-indicator::after {
-          content: '↕';
-          margin-left: 4px;
-          opacity: 0.5;
+        .filter-btn:hover {
+          background-color: #f3f4f6;
         }
 
-        .sort-asc::after {
-          content: '↑';
-          opacity: 1;
+        .filter-menu {
+          position: absolute;
+          background: white;
+          border: 1px solid #e2e8f0;
+          border-radius: 0.375rem;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+          z-index: 20;
+          min-width: 200px;
         }
 
-        .sort-desc::after {
-          content: '↓';
-          opacity: 1;
+        .filter-option {
+          display: block;
+          width: 100%;
+          text-align: left;
+          padding: 0.5rem 1rem;
+          border: none;
+          background: none;
+          font-size: 0.875rem;
+          cursor: pointer;
         }
 
-        .empty-state {
-          text-align: center;
-          padding: 32px;
-          color: #64748b;
+        .filter-option:hover {
+          background-color: #f3f4f6;
+        }
+
+        .filter-option.active {
+          background-color: #eff6ff;
+          color: #2563eb;
+        }
+
+        .active-filter {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.25rem;
+          padding: 0.25rem 0.75rem;
+          background-color: #eff6ff;
+          color: #2563eb;
+          border-radius: 0.375rem;
+          font-size: 0.875rem;
+        }
+
+        .remove-filter {
+          border: none;
+          background: none;
+          cursor: pointer;
+          padding: 0.125rem;
+          color: #2563eb;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .example-section {
+          margin-top: 1rem;
+          padding: 1rem;
+          background-color: #f9fafb;
+          border-radius: 0.5rem;
+        }
+
+        .example-section h3 {
+          margin: 0 0 0.5rem 0;
+          font-size: 0.875rem;
+          color: #4b5563;
+        }
+
+        .example-section ul {
+          margin: 0;
+          padding-left: 1.5rem;
+          font-size: 0.875rem;
+          color: #6b7280;
+        }
+
+        .example-section li {
+          margin: 0.25rem 0;
         }
       </style>
     `;
 
-    const getSortIndicatorClass = (column) => {
-      if (this._sortColumn === column) {
-        return this._sortDirection === 'asc' ? 'sort-asc' : 'sort-desc';
-      }
-      return 'sort-indicator';
-    };
-
-    const isNumber = (value) => typeof value === 'number' || !isNaN(parseFloat(value));
-
-    const renderCell = (value, column) => {
-      // Check if it's a status-like column
-      if (column.toLowerCase().includes('status')) {
-        return `
-          <div class="status-cell ${this.getStatusClass(value)}">
-            <span class="status-indicator"></span>
-            ${value}
-          </div>
-        `;
-      }
-
-      // Format the value based on its type
-      const formattedValue = this.formatValue(value, column);
-      
-      // Add specific styling for numbers
-      if (isNumber(value)) {
-        return `<div class="number">${formattedValue}</div>`;
-      }
-
-      return formattedValue;
-    };
-
     const html = `
       <div class="container">
-        <div class="header">
-          <input type="text" class="filter-input" placeholder="Filter items...">
-        </div>
-        
-        ${this._columns.length > 0 ? `
-          <table>
-            <thead>
-              <tr>
-                ${this._columns.map(column => `
-                  <th data-column="${column}" class="${getSortIndicatorClass(column)}">
-                    ${this.formatColumnHeader(column)}
-                  </th>
-                `).join('')}
-              </tr>
-            </thead>
-            <tbody>
-              ${this._filteredData.map(row => `
-                <tr>
-                  ${this._columns.map(column => `
-                    <td>${renderCell(row[column], column)}</td>
-                  `).join('')}
-                </tr>
+        <div class="search-bar">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input
+            type="text"
+            class="search-input"
+            placeholder="${this.getAttribute('placeholder') || 'Search members (try: active members, member since 2023)'}"
+            value="${this._searchText}"
+          >
+          ${this._searchText ? `
+            <button class="clear-btn">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          ` : ''}
+          
+          ${this._suggestions.length > 0 ? `
+            <div class="suggestions">
+              ${this._suggestions.map(suggestion => `
+                <div class="suggestion-item">${suggestion}</div>
               `).join('')}
-            </tbody>
-          </table>
-        ` : `
-          <div class="empty-state">No data available</div>
-        `}
-        
-        <div class="footer">
-          <span>${this._filteredData.length} of ${this._data.length} row(s)</span>
+            </div>
+          ` : ''}
+        </div>
+
+        <div class="filters">
+          <div style="position: relative;">
+            <button class="filter-btn">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+              </svg>
+              Filters
+            </button>
+            
+            ${this._showFilterMenu ? `
+              <div class="filter-menu">
+                ${this._commonFilters.map(filter => `
+                  <button
+                    class="filter-option ${this._activeFilters.has(filter.id) ? 'active' : ''}"
+                    data-id="${filter.id}"
+                  >
+                    ${filter.label}
+                  </button>
+                `).join('')}
+              </div>
+            ` : ''}
+          </div>
+
+          ${Array.from(this._activeFilters).map(filterId => {
+            const filter = this._commonFilters.find(f => f.id === filterId);
+            return filter ? `
+              <div class="active-filter">
+                ${filter.label}
+                <button class="remove-filter" data-id="${filter.id}">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </div>
+            ` : '';
+          }).join('')}
+        </div>
+
+        <div class="example-section">
+          <h3>Example searches:</h3>
+          <ul>
+            <li>"active members in California"</li>
+            <li>"member since January 2023"</li>
+            <li>"premium members with expired cards"</li>
+            <li>"members@example.com"</li>
+            <li>"paid > $500 last month"</li>
+          </ul>
         </div>
       </div>
     `;
 
-    this.shadowRoot.innerHTML = style + html;
+    this.shadowRoot.innerHTML = styles + html;
 
     if (this._bindEvents) {
       this._bindEvents();
@@ -384,4 +407,5 @@ class DataTable extends HTMLElement {
   }
 }
 
-customElements.define('data-table', DataTable);
+// Register the web component
+customElements.define('member-search', MemberSearch);
