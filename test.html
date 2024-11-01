@@ -1,3 +1,15 @@
+<member-search placeholder="Search members..."></member-search>
+
+<script>
+  const searchComponent = document.querySelector('member-search');
+  
+  searchComponent.addEventListener('search', (e) => {
+    console.log('Search:', e.detail.text);
+    console.log('Active filters:', e.detail.filters);
+    console.log('Preview results:', e.detail.previewResults);
+  });
+</script>
+
 class MemberSearch extends HTMLElement {
   constructor() {
     super();
