@@ -760,8 +760,155 @@ getDeleteIcon() {
 }
 
 render() {
-  // Use the template from previous reply here
-  // This method stays the same as before
+  const template = `
+    ${styles}
+    <div class="table-container">
+      <div class="table-header">
+        <div class="table-title">
+          Members (${this._data.length})
+        </div>
+        <div class="table-controls">
+          <select class="page-size-select">
+            <option value="10" ${this._pageSize === 10 ? 'selected' : ''}>10 per page</option>
+            <option value="25" ${this._pageSize === 25 ? 'selected' : ''}>25 per page</option>
+            <option value="50" ${this._pageSize === 50 ? 'selected' : ''}>50 per page</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="table-scroll">
+        ${this._data.length === 0 ? `
+          <div class="table-empty">
+            No members found
+          </div>
+        ` : `
+          <table>
+            <thead>
+              <tr>
+                <th class="checkbox-cell">
+                  <input 
+                    type="checkbox" 
+                    id="select-all"
+                    ${this._selectedRows.size === this._data.length ? 'checked' : ''}
+                  >
+                </th>
+                ${this._columns.map(column => `
+                  <th 
+                    class="${column.sortable ? 'sortable' : ''} 
+                           ${this._sortField === column.id ? 
+                             this._sortDirection === 'asc' ? 'sort-asc' : 'sort-desc' 
+                             : column.sortable ? 'sort-indicator' : ''}"
+                    data-field="${column.id}"
+                    data-sortable="${column.sortable}"
+                  >
+                    ${column.header}
+                  </th>
+                `).join('')}
+              </tr>
+            </thead>
+            <tbody>
+              ${this.getPaginatedData().map(member => `
+                <tr class="member-row" data-id="${member.id}">
+                  <td class="checkbox-cell">
+                    <input 
+                      type="checkbox" 
+                      class="row-checkbox"
+                      data-id="${member.id}"
+                      ${this._selectedRows.has(member.id) ? 'checked' : ''}
+                    >
+                  </td>
+                  ${this._columns.map(column => `
+                    <td>${column.render(member)}</td>
+                  `).join('')}
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `}
+      </div>
+
+      ${this._data.length > 0 ? `
+        <div class="pagination">
+          <div class="pagination-info">
+            Showing ${((this._currentPage - 1) * this._pageSize) + 1} to 
+            ${Math.min(this._currentPage * this._pageSize, this._data.length)} of 
+            ${this._data.length} results
+          </div>
+          <div class="pagination-controls">
+            <button 
+              class="pagination-button prev-page" 
+              ${this._currentPage === 1 ? 'disabled' : ''}
+            >
+              Previous
+            </button>
+            <button 
+              class="pagination-button next-page"
+              ${this._currentPage === this._totalPages ? 'disabled' : ''}
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      ` : ''}
+    </div>
+  `;
+
+  this.shadowRoot.innerHTML = template;
+  
+  // After rendering, bind all event listeners
+  if (this._bindEvents) {
+    this._bindEvents();
+  }
+}
+
+// Helper methods for icons (used in column definitions)
+getStatusIcon(status) {
+  return {
+    'Active': `
+      <svg class="icon success" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20 6L9 17L4 12"></path>
+      </svg>
+    `,
+    'Inactive': `
+      <svg class="icon error" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M18 6L6 18M6 6l12 12"></path>
+      </svg>
+    `,
+    'Pending': `
+      <svg class="icon warning" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+      </svg>
+    `
+  }[status] || '';
+}
+
+getCalendarIcon() {
+  return `
+    <svg class="icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+      <line x1="16" y1="2" x2="16" y2="6"></line>
+      <line x1="8" y1="2" x2="8" y2="6"></line>
+      <line x1="3" y1="10" x2="21" y2="10"></line>
+    </svg>
+  `;
+}
+
+getPremiumIcon() {
+  return `
+    <svg class="icon premium" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+    </svg>
+  `;
+}
+
+getMoreIcon() {
+  return `
+    <svg class="icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="1"></circle>
+      <circle cx="19" cy="12" r="1"></circle>
+      <circle cx="5" cy="12" r="1"></circle>
+    </svg>
+  `;
 }
 }
 
