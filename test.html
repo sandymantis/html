@@ -1,3 +1,32 @@
+// Example with different data structure
+const table = document.querySelector('data-table');
+
+// Will automatically create columns for all fields
+table.data = [
+  {
+    id: 1,
+    userName: "john_doe",
+    lastLoginDate: "2024-01-15",
+    isActive: true,
+    accountBalance: 1234.56,
+    status: "Active"
+  },
+  {
+    id: 2,
+    userName: "jane_smith",
+    lastLoginDate: "2024-01-20",
+    isActive: false,
+    accountBalance: 789.12,
+    status: "Pending"
+  }
+];
+
+// Or your original data structure
+table.data = [
+  { status: 'Success', email: 'ken99@yahoo.com', amount: 316.00 },
+  { status: 'Failed', email: 'carmella@hotmail.com', amount: 721.00 }
+];
+
 class DataTable extends HTMLElement {
   constructor() {
     super();
