@@ -3,7 +3,49 @@
     display: block;
     font-family: system-ui, -apple-system, sans-serif;
   }
+.action-menu {
+  position: absolute;
+  z-index: 50;
+  min-width: 200px;
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
 
+.action-menu-content {
+  padding: 0.5rem;
+}
+
+.action-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.5rem;
+  text-align: left;
+  border: none;
+  background: none;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+  color: #374151;
+  cursor: pointer;
+}
+
+.action-menu-item:hover {
+  background-color: #f3f4f6;
+}
+
+.action-menu-divider {
+  margin: 0.5rem 0;
+  border: 0;
+  border-top: 1px solid #e5e7eb;
+}
+
+.action-menu .icon {
+  width: 1rem;
+  height: 1rem;
+}
   .table-container {
     background: white;
     border-radius: 0.5rem;
