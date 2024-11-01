@@ -6,30 +6,31 @@ class DataTable extends HTMLElement {
     this._filteredData = [];
     this._sortColumn = null;
     this._sortDirection = 'asc';
-    this.render(); // Initial render
+    this._columns = [];
+    this.render();
   }
 
-  // Define observed attributes
   static get observedAttributes() {
     return ['data'];
   }
 
-  // Getter for data property
   get data() {
     return this._data;
   }
 
-  // Setter for data property
   set data(newData) {
     if (Array.isArray(newData)) {
       this._data = [...newData];
       this._filteredData = [...newData];
+      // Extract columns from the first data item
+      if (newData.length > 0) {
+        this._columns = Object.keys(newData[0]);
+      }
       this.setAttribute('data', JSON.stringify(newData));
       this.render();
     }
   }
 
-  // Handle attribute changes
   attributeChangedCallback(name, oldValue, newValue) {
     if (name === 'data' && oldValue !== newValue) {
       try {
@@ -37,6 +38,9 @@ class DataTable extends HTMLElement {
         if (Array.isArray(parsedData)) {
           this._data = parsedData;
           this._filteredData = [...parsedData];
+          if (parsedData.length > 0) {
+            this._columns = Object.keys(parsedData[0]);
+          }
           this.render();
         }
       } catch (e) {
@@ -50,9 +54,7 @@ class DataTable extends HTMLElement {
   }
 
   addEventListeners() {
-    // We need to bind the event listeners after each render
     const bindEvents = () => {
-      // Filter input handler
       const filterInput = this.shadowRoot.querySelector('.filter-input');
       if (filterInput) {
         filterInput.addEventListener('input', (e) => {
@@ -66,7 +68,6 @@ class DataTable extends HTMLElement {
         });
       }
 
-      // Sort handler for column headers
       const table = this.shadowRoot.querySelector('table');
       if (table) {
         table.addEventListener('click', (e) => {
@@ -79,10 +80,7 @@ class DataTable extends HTMLElement {
       }
     };
 
-    // Initial binding
     bindEvents();
-
-    // Store the bindEvents function for use after renders
     this._bindEvents = bindEvents;
   }
 
@@ -112,13 +110,50 @@ class DataTable extends HTMLElement {
     this.render();
   }
 
+  formatValue(value, column) {
+    if (typeof value === 'number') {
+      // Format numbers with 2 decimal places
+      return value.toFixed(2);
+    }
+    
+    if (column.toLowerCase().includes('date')) {
+      // Try to format dates
+      try {
+        return new Date(value).toLocaleDateString();
+      } catch (e) {
+        return value;
+      }
+    }
+
+    if (typeof value === 'boolean') {
+      return value ? 'Yes' : 'No';
+    }
+
+    return value;
+  }
+
+  formatColumnHeader(header) {
+    // Convert camelCase or snake_case to Title Case with spaces
+    return header
+      .replace(/([A-Z])/g, ' $1') // Split camelCase
+      .replace(/_/g, ' ') // Replace underscores with spaces
+      .replace(/^./, str => str.toUpperCase()) // Capitalize first letter
+      .trim();
+  }
+
   getStatusClass(status) {
+    if (typeof status !== 'string') return '';
+    
     const statusMap = {
-      'Success': 'success',
-      'Failed': 'failed',
-      'Processing': 'processing'
+      'success': 'success',
+      'failed': 'failed',
+      'processing': 'processing',
+      'pending': 'processing',
+      'error': 'failed',
+      'complete': 'success',
+      'completed': 'success'
     };
-    return statusMap[status] || '';
+    return statusMap[status.toLowerCase()] || '';
   }
 
   render() {
@@ -152,21 +187,34 @@ class DataTable extends HTMLElement {
         table {
           width: 100%;
           border-collapse: collapse;
+          overflow-x: auto;
+          display: block;
         }
 
         th, td {
           padding: 12px;
           text-align: left;
           border-bottom: 1px solid #e2e8f0;
+          min-width: 100px;
+        }
+
+        td {
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 200px;
         }
 
         th {
           cursor: pointer;
           user-select: none;
+          background: #f8fafc;
+          position: sticky;
+          top: 0;
         }
 
         th:hover {
-          background-color: #f8fafc;
+          background-color: #f1f5f9;
         }
 
         .status-cell {
@@ -193,8 +241,9 @@ class DataTable extends HTMLElement {
           background-color: #3b82f6;
         }
 
-        .amount {
+        .number {
           font-family: monospace;
+          text-align: right;
         }
 
         .footer {
@@ -221,6 +270,12 @@ class DataTable extends HTMLElement {
           content: '↓';
           opacity: 1;
         }
+
+        .empty-state {
+          text-align: center;
+          padding: 32px;
+          color: #64748b;
+        }
       </style>
     `;
 
@@ -231,35 +286,60 @@ class DataTable extends HTMLElement {
       return 'sort-indicator';
     };
 
+    const isNumber = (value) => typeof value === 'number' || !isNaN(parseFloat(value));
+
+    const renderCell = (value, column) => {
+      // Check if it's a status-like column
+      if (column.toLowerCase().includes('status')) {
+        return `
+          <div class="status-cell ${this.getStatusClass(value)}">
+            <span class="status-indicator"></span>
+            ${value}
+          </div>
+        `;
+      }
+
+      // Format the value based on its type
+      const formattedValue = this.formatValue(value, column);
+      
+      // Add specific styling for numbers
+      if (isNumber(value)) {
+        return `<div class="number">${formattedValue}</div>`;
+      }
+
+      return formattedValue;
+    };
+
     const html = `
       <div class="container">
         <div class="header">
           <input type="text" class="filter-input" placeholder="Filter items...">
         </div>
         
-        <table>
-          <thead>
-            <tr>
-              <th data-column="status" class="${getSortIndicatorClass('status')}">Status</th>
-              <th data-column="email" class="${getSortIndicatorClass('email')}">Email</th>
-              <th data-column="amount" class="${getSortIndicatorClass('amount')}">Amount</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${this._filteredData.map(row => `
+        ${this._columns.length > 0 ? `
+          <table>
+            <thead>
               <tr>
-                <td>
-                  <div class="status-cell ${this.getStatusClass(row.status)}">
-                    <span class="status-indicator"></span>
-                    ${row.status}
-                  </div>
-                </td>
-                <td>${row.email}</td>
-                <td class="amount">$${parseFloat(row.amount).toFixed(2)}</td>
+                ${this._columns.map(column => `
+                  <th data-column="${column}" class="${getSortIndicatorClass(column)}">
+                    ${this.formatColumnHeader(column)}
+                  </th>
+                `).join('')}
               </tr>
-            `).join('')}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              ${this._filteredData.map(row => `
+                <tr>
+                  ${this._columns.map(column => `
+                    <td>${renderCell(row[column], column)}</td>
+                  `).join('')}
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        ` : `
+          <div class="empty-state">No data available</div>
+        `}
         
         <div class="footer">
           <span>${this._filteredData.length} of ${this._data.length} row(s)</span>
@@ -269,12 +349,10 @@ class DataTable extends HTMLElement {
 
     this.shadowRoot.innerHTML = style + html;
 
-    // Rebind events after rendering
     if (this._bindEvents) {
       this._bindEvents();
     }
   }
 }
 
-// Register the web component
 customElements.define('data-table', DataTable);
