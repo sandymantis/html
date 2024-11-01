@@ -1,5 +1,3 @@
-
-// Define the DataTable web component
 class DataTable extends HTMLElement {
   constructor() {
     super();
@@ -8,47 +6,84 @@ class DataTable extends HTMLElement {
     this._filteredData = [];
     this._sortColumn = null;
     this._sortDirection = 'asc';
+    this.render(); // Initial render
   }
 
+  // Define observed attributes
   static get observedAttributes() {
-    return ['columns'];
+    return ['data'];
   }
 
-  connectedCallback() {
-    this.render();
-    this.addEventListeners();
-  }
-
-  set data(value) {
-    this._data = value;
-    this._filteredData = [...value];
-    this.render();
-  }
-
+  // Getter for data property
   get data() {
     return this._data;
   }
 
-  addEventListeners() {
-    // Filter input handler
-    this.shadowRoot.querySelector('.filter-input')?.addEventListener('input', (e) => {
-      const filterValue = e.target.value.toLowerCase();
-      this._filteredData = this._data.filter(row => 
-        Object.values(row).some(value => 
-          value.toString().toLowerCase().includes(filterValue)
-        )
-      );
+  // Setter for data property
+  set data(newData) {
+    if (Array.isArray(newData)) {
+      this._data = [...newData];
+      this._filteredData = [...newData];
+      this.setAttribute('data', JSON.stringify(newData));
       this.render();
-    });
+    }
+  }
 
-    // Sort handler for column headers
-    this.shadowRoot.querySelector('table')?.addEventListener('click', (e) => {
-      const headerCell = e.target.closest('th');
-      if (headerCell) {
-        const column = headerCell.dataset.column;
-        this.sortByColumn(column);
+  // Handle attribute changes
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (name === 'data' && oldValue !== newValue) {
+      try {
+        const parsedData = JSON.parse(newValue);
+        if (Array.isArray(parsedData)) {
+          this._data = parsedData;
+          this._filteredData = [...parsedData];
+          this.render();
+        }
+      } catch (e) {
+        console.error('Invalid data provided to data-table');
       }
-    });
+    }
+  }
+
+  connectedCallback() {
+    this.addEventListeners();
+  }
+
+  addEventListeners() {
+    // We need to bind the event listeners after each render
+    const bindEvents = () => {
+      // Filter input handler
+      const filterInput = this.shadowRoot.querySelector('.filter-input');
+      if (filterInput) {
+        filterInput.addEventListener('input', (e) => {
+          const filterValue = e.target.value.toLowerCase();
+          this._filteredData = this._data.filter(row => 
+            Object.values(row).some(value => 
+              String(value).toLowerCase().includes(filterValue)
+            )
+          );
+          this.render();
+        });
+      }
+
+      // Sort handler for column headers
+      const table = this.shadowRoot.querySelector('table');
+      if (table) {
+        table.addEventListener('click', (e) => {
+          const headerCell = e.target.closest('th');
+          if (headerCell) {
+            const column = headerCell.dataset.column;
+            this.sortByColumn(column);
+          }
+        });
+      }
+    };
+
+    // Initial binding
+    bindEvents();
+
+    // Store the bindEvents function for use after renders
+    this._bindEvents = bindEvents;
   }
 
   sortByColumn(column) {
@@ -170,8 +205,31 @@ class DataTable extends HTMLElement {
           font-size: 14px;
           color: #64748b;
         }
+
+        .sort-indicator::after {
+          content: '↕';
+          margin-left: 4px;
+          opacity: 0.5;
+        }
+
+        .sort-asc::after {
+          content: '↑';
+          opacity: 1;
+        }
+
+        .sort-desc::after {
+          content: '↓';
+          opacity: 1;
+        }
       </style>
     `;
+
+    const getSortIndicatorClass = (column) => {
+      if (this._sortColumn === column) {
+        return this._sortDirection === 'asc' ? 'sort-asc' : 'sort-desc';
+      }
+      return 'sort-indicator';
+    };
 
     const html = `
       <div class="container">
@@ -182,9 +240,9 @@ class DataTable extends HTMLElement {
         <table>
           <thead>
             <tr>
-              <th data-column="status">Status</th>
-              <th data-column="email">Email</th>
-              <th data-column="amount">Amount</th>
+              <th data-column="status" class="${getSortIndicatorClass('status')}">Status</th>
+              <th data-column="email" class="${getSortIndicatorClass('email')}">Email</th>
+              <th data-column="amount" class="${getSortIndicatorClass('amount')}">Amount</th>
             </tr>
           </thead>
           <tbody>
@@ -210,165 +268,13 @@ class DataTable extends HTMLElement {
     `;
 
     this.shadowRoot.innerHTML = style + html;
-  }
-}
 
-// Register the web component
-customElements.define('data-table', DataTable);// accordion-component.js
-class AccordionComponent extends HTMLElement {
-  constructor() {
-    super();
-    this.attachShadow({ mode: 'open' });
-  }
-
-  connectedCallback() {
-    this.render();
-  }
-
-  render() {
-    this.shadowRoot.innerHTML = `
-      <style>
-        :host {
-          display: block;
-          font-family: system-ui, -apple-system, sans-serif;
-        }
-
-        .accordion {
-          border: 1px solid #e5e7eb;
-          border-radius: 4px;
-          overflow: hidden;
-        }
-      </style>
-      <div class="accordion">
-        <slot></slot>
-      </div>
-    `;
-  }
-}
-
-class AccordionItemComponent extends HTMLElement {
-  constructor() {
-    super();
-    this.attachShadow({ mode: 'open' });
-  }
-
-  connectedCallback() {
-    const title = this.getAttribute('title') || 'Accordion Item';
-    const content = this.innerHTML;
-    
-    this.shadowRoot.innerHTML = `
-      <style>
-        :host {
-          display: block;
-          border-bottom: 1px solid #e5e7eb;
-        }
-
-        :host(:last-child) {
-          border-bottom: none;
-        }
-
-        .accordion-trigger {
-          width: 100%;
-          padding: 1rem;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          background: none;
-          border: none;
-          cursor: pointer;
-          text-align: left;
-          font-size: 0.875rem;
-          font-weight: 500;
-          transition: background-color 0.2s;
-        }
-
-        .accordion-trigger:hover {
-          text-decoration: underline;
-          background-color: #f9fafb;
-        }
-
-        .chevron {
-          width: 16px;
-          height: 16px;
-          transition: transform 0.2s;
-        }
-
-        .accordion-trigger[aria-expanded="true"] .chevron {
-          transform: rotate(180deg);
-        }
-
-        .accordion-content {
-          height: 0;
-          overflow: hidden;
-          transition: height 0.3s ease-out;
-          padding: 0 1rem;
-        }
-
-        .accordion-content.expanded {
-          height: auto;
-          padding: 1rem;
-        }
-
-        .content-inner {
-          opacity: 0;
-          transition: opacity 0.3s ease-out;
-        }
-
-        .content-inner.visible {
-          opacity: 1;
-        }
-      </style>
-      <div class="accordion-item">
-        <button class="accordion-trigger" aria-expanded="false">
-          ${title}
-          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="6 9 12 15 18 9"></polyline>
-          </svg>
-        </button>
-        <div class="accordion-content">
-          <div class="content-inner">
-            ${content}
-          </div>
-        </div>
-      </div>
-    `;
-
-    this.trigger = this.shadowRoot.querySelector('.accordion-trigger');
-    this.content = this.shadowRoot.querySelector('.accordion-content');
-    this.contentInner = this.shadowRoot.querySelector('.content-inner');
-    
-    this.trigger.addEventListener('click', () => this.toggleAccordion());
-  }
-
-  toggleAccordion() {
-    const isExpanded = this.trigger.getAttribute('aria-expanded') === 'true';
-    this.trigger.setAttribute('aria-expanded', !isExpanded);
-    
-    if (!isExpanded) {
-      // Expanding
-      this.content.classList.add('expanded');
-      this.contentInner.classList.add('visible');
-      // Set actual height
-      const height = this.contentInner.offsetHeight;
-      this.content.style.height = height + 'px';
-    } else {
-      // Collapsing
-      const height = this.content.offsetHeight;
-      this.content.style.height = height + 'px';
-      // Force reflow
-      this.content.offsetHeight;
-      this.content.style.height = '0';
-      this.contentInner.classList.remove('visible');
-      
-      // Remove expanded class after transition
-      this.content.addEventListener('transitionend', () => {
-        if (!isExpanded) return;
-        this.content.classList.remove('expanded');
-      }, { once: true });
+    // Rebind events after rendering
+    if (this._bindEvents) {
+      this._bindEvents();
     }
   }
 }
 
-// Register the components
-customElements.define('custom-accordion', AccordionComponent);
-customElements.define('accordion-item', AccordionItemComponent);
+// Register the web component
+customElements.define('data-table', DataTable);
