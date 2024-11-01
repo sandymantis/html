@@ -1,423 +1,200 @@
-<member-search placeholder="Search members..."></member-search>
-
-<script>
-  const searchComponent = document.querySelector('member-search');
-  
-  searchComponent.addEventListener('search', (e) => {
-    console.log('Search:', e.detail.text);
-    console.log('Active filters:', e.detail.filters);
-    console.log('Preview results:', e.detail.previewResults);
-  });
-</script>
-
-class MemberSearch extends HTMLElement {
+class MemberTable extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
     
     // Internal state
-    this._searchText = '';
-    this._activeFilters = new Set();
-    this._showFilterMenu = false;
-    this._suggestions = [];
-    
-    // Common filters
-    this._commonFilters = [
-      { id: 'active', label: 'Active Members' },
-      { id: 'new', label: 'New Members' },
-      { id: 'premium', label: 'Premium' },
-      { id: 'trial', label: 'Trial' },
-      { id: 'expired', label: 'Expired' }
+    this._data = [];
+    this._sortField = 'name';
+    this._sortDirection = 'asc';
+    this._selectedRows = new Set();
+    this._pageSize = 10;
+    this._currentPage = 1;
+    this._totalPages = 0;
+
+    // Column definitions
+    this._columns = [
+      {
+        id: 'status',
+        header: 'Status',
+        sortable: true,
+        render: (member) => `
+          <div class="status-cell ${member.status.toLowerCase()}">
+            ${this.getStatusIcon(member.status)}
+            <span>${member.status}</span>
+          </div>
+        `
+      },
+      {
+        id: 'name',
+        header: 'Member Name',
+        sortable: true,
+        render: (member) => `
+          <div class="member-cell">
+            <div class="member-avatar">
+              ${member.name.split(' ').map(n => n[0]).join('')}
+            </div>
+            <div class="member-info">
+              <div class="member-name">${member.name}</div>
+              <div class="member-email">${member.email}</div>
+            </div>
+          </div>
+        `
+      },
+      {
+        id: 'membershipType',
+        header: 'Membership',
+        sortable: true,
+        render: (member) => `
+          <div class="membership-cell">
+            ${member.membershipType === 'Premium' ? this.getPremiumIcon() : ''}
+            <span class="membership-badge ${member.membershipType.toLowerCase()}">
+              ${member.membershipType}
+            </span>
+          </div>
+        `
+      },
+      {
+        id: 'joinDate',
+        header: 'Join Date',
+        sortable: true,
+        render: (member) => `
+          <div class="date-cell">
+            ${this.getCalendarIcon()}
+            ${new Date(member.joinDate).toLocaleDateString()}
+          </div>
+        `
+      },
+      {
+        id: 'lastActive',
+        header: 'Last Active',
+        sortable: true,
+        render: (member) => `
+          <div class="date-cell">
+            ${this.formatLastActive(member.lastActive)}
+          </div>
+        `
+      },
+      {
+        id: 'actions',
+        header: '',
+        sortable: false,
+        render: (member) => `
+          <div class="actions-cell">
+            <button class="action-button" data-member-id="${member.id}">
+              ${this.getMoreIcon()}
+            </button>
+          </div>
+        `
+      }
     ];
 
     this.render();
   }
 
   static get observedAttributes() {
-    return ['placeholder'];
+    return ['data'];
   }
 
-  // Parse search text for NLP-like suggestions
-  parseSearchText(text) {
-    const suggestions = [];
-    
-    if (text.toLowerCase().includes('member since')) {
-      suggestions.push('Search by join date');
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (name === 'data') {
+      try {
+        this._data = JSON.parse(newValue);
+        this._totalPages = Math.ceil(this._data.length / this._pageSize);
+        this.render();
+      } catch (e) {
+        console.error('Invalid data provided to member-table');
+      }
     }
-    if (text.toLowerCase().includes('paid') || text.toLowerCase().includes('payment')) {
-      suggestions.push('Search payment history');
-    }
-    if (text.toLowerCase().includes('active') || text.toLowerCase().includes('status')) {
-      suggestions.push('Search by member status');
-    }
-    if (text.match(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/)) {
-      suggestions.push('Search by email');
-    }
-    if (text.match(/\b\d{3}[-.]?\d{3}[-.]?\d{4}\b/)) {
-      suggestions.push('Search by phone number');
-    }
+  }
 
-    this._suggestions = suggestions;
+  get data() {
+    return this._data;
+  }
+
+  set data(newData) {
+    if (Array.isArray(newData)) {
+      this._data = [...newData];
+      this._totalPages = Math.ceil(this._data.length / this._pageSize);
+      this.setAttribute('data', JSON.stringify(newData));
+      this.render();
+    }
+  }
+
+  handleSort(field) {
+    if (field === this._sortField) {
+      this._sortDirection = this._sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this._sortField = field;
+      this._sortDirection = 'asc';
+    }
     this.render();
+  }
+
+  handleRowSelect(id) {
+    if (this._selectedRows.has(id)) {
+      this._selectedRows.delete(id);
+    } else {
+      this._selectedRows.add(id);
+    }
+    this.render();
+  }
+
+  handleSelectAll() {
+    if (this._selectedRows.size === this._data.length) {
+      this._selectedRows.clear();
+    } else {
+      this._selectedRows = new Set(this._data.map(row => row.id));
+    }
+    this.render();
+  }
+
+  handlePageChange(direction) {
+    if (direction === 'prev' && this._currentPage > 1) {
+      this._currentPage--;
+    } else if (direction === 'next' && this._currentPage < this._totalPages) {
+      this._currentPage++;
+    }
+    this.render();
+  }
+
+  handlePageSizeChange(newSize) {
+    this._pageSize = parseInt(newSize);
+    this._currentPage = 1;
+    this._totalPages = Math.ceil(this._data.length / this._pageSize);
+    this.render();
+  }
+
+  sortData(data) {
+    return [...data].sort((a, b) => {
+      if (a[this._sortField] < b[this._sortField]) return this._sortDirection === 'asc' ? -1 : 1;
+      if (a[this._sortField] > b[this._sortField]) return this._sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }
+
+  getPaginatedData() {
+    const sortedData = this.sortData(this._data);
+    const start = (this._currentPage - 1) * this._pageSize;
+    const end = start + this._pageSize;
+    return sortedData.slice(start, end);
+  }
+
+  formatLastActive(date) {
+    const now = new Date();
+    const lastActive = new Date(date);
+    const diffTime = Math.abs(now - lastActive);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    return lastActive.toLocaleDateString();
   }
 
   connectedCallback() {
     this.addEventListeners();
   }
-
-  addEventListeners() {
-    const bindEvents = () => {
-      // Search input handler
-      const searchInput = this.shadowRoot.querySelector('.search-input');
-      if (searchInput) {
-        searchInput.addEventListener('input', (e) => {
-          this._searchText = e.target.value;
-          this.parseSearchText(this._searchText);
-          this.dispatchEvent(new CustomEvent('search', {
-            detail: { text: this._searchText, filters: Array.from(this._activeFilters) }
-          }));
-        });
-      }
-
-      // Clear button
-      const clearBtn = this.shadowRoot.querySelector('.clear-btn');
-      if (clearBtn) {
-        clearBtn.addEventListener('click', () => {
-          this._searchText = '';
-          this._suggestions = [];
-          this._activeFilters.clear();
-          this.render();
-          this.dispatchEvent(new CustomEvent('clear'));
-        });
-      }
-
-      // Filter toggle button
-      const filterBtn = this.shadowRoot.querySelector('.filter-btn');
-      if (filterBtn) {
-        filterBtn.addEventListener('click', () => {
-          this._showFilterMenu = !this._showFilterMenu;
-          this.render();
-        });
-      }
-
-      // Filter click handlers
-      const filterButtons = this.shadowRoot.querySelectorAll('.filter-option');
-      filterButtons.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          const filterId = e.target.dataset.id;
-          if (this._activeFilters.has(filterId)) {
-            this._activeFilters.delete(filterId);
-          } else {
-            this._activeFilters.add(filterId);
-          }
-          this.render();
-          this.dispatchEvent(new CustomEvent('filter', {
-            detail: { filters: Array.from(this._activeFilters) }
-          }));
-        });
-      });
-
-      // Suggestion click handlers
-      const suggestions = this.shadowRoot.querySelectorAll('.suggestion-item');
-      suggestions.forEach(suggestion => {
-        suggestion.addEventListener('click', (e) => {
-          this._searchText = e.target.textContent;
-          this._suggestions = [];
-          this.render();
-          this.dispatchEvent(new CustomEvent('search', {
-            detail: { text: this._searchText, filters: Array.from(this._activeFilters) }
-          }));
-        });
-      });
-
-      // Close filter menu when clicking outside
-      document.addEventListener('click', (e) => {
-        const filterMenu = this.shadowRoot.querySelector('.filter-menu');
-        const filterBtn = this.shadowRoot.querySelector('.filter-btn');
-        if (filterMenu && !filterMenu.contains(e.target) && !filterBtn.contains(e.target)) {
-          this._showFilterMenu = false;
-          this.render();
-        }
-      });
-    };
-
-    bindEvents();
-    this._bindEvents = bindEvents;
-  }
-
-  render() {
-    const styles = `
-      <style>
-        :host {
-          display: block;
-          font-family: system-ui, -apple-system, sans-serif;
-        }
-
-        .container {
-          width: 100%;
-          max-width: 800px;
-          margin: 0 auto;
-        }
-
-        .search-bar {
-          position: relative;
-          margin-bottom: 1rem;
-        }
-
-        .search-input {
-          width: 100%;
-          padding: 0.75rem 2.5rem;
-          border: 1px solid #e2e8f0;
-          border-radius: 0.5rem;
-          font-size: 0.875rem;
-          outline: none;
-          transition: border-color 0.2s, box-shadow 0.2s;
-        }
-
-        .search-input:focus {
-          border-color: #3b82f6;
-          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-
-        .search-icon {
-          position: absolute;
-          left: 0.75rem;
-          top: 50%;
-          transform: translateY(-50%);
-          width: 1.25rem;
-          height: 1.25rem;
-          color: #9ca3af;
-        }
-
-        .clear-btn {
-          position: absolute;
-          right: 0.75rem;
-          top: 50%;
-          transform: translateY(-50%);
-          background: none;
-          border: none;
-          cursor: pointer;
-          padding: 0.25rem;
-          color: #9ca3af;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .suggestions {
-          position: absolute;
-          top: 100%;
-          left: 0;
-          right: 0;
-          background: white;
-          border: 1px solid #e2e8f0;
-          border-radius: 0.5rem;
-          margin-top: 0.25rem;
-          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-          z-index: 10;
-        }
-
-        .suggestion-item {
-          padding: 0.5rem 1rem;
-          cursor: pointer;
-          font-size: 0.875rem;
-        }
-
-        .suggestion-item:hover {
-          background-color: #f3f4f6;
-        }
-
-        .filters {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 0.5rem;
-          margin-bottom: 1rem;
-        }
-
-        .filter-btn {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 0.5rem 1rem;
-          border: 1px solid #e2e8f0;
-          border-radius: 0.375rem;
-          background: white;
-          font-size: 0.875rem;
-          cursor: pointer;
-        }
-
-        .filter-btn:hover {
-          background-color: #f3f4f6;
-        }
-
-        .filter-menu {
-          position: absolute;
-          background: white;
-          border: 1px solid #e2e8f0;
-          border-radius: 0.375rem;
-          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-          z-index: 20;
-          min-width: 200px;
-        }
-
-        .filter-option {
-          display: block;
-          width: 100%;
-          text-align: left;
-          padding: 0.5rem 1rem;
-          border: none;
-          background: none;
-          font-size: 0.875rem;
-          cursor: pointer;
-        }
-
-        .filter-option:hover {
-          background-color: #f3f4f6;
-        }
-
-        .filter-option.active {
-          background-color: #eff6ff;
-          color: #2563eb;
-        }
-
-        .active-filter {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.25rem;
-          padding: 0.25rem 0.75rem;
-          background-color: #eff6ff;
-          color: #2563eb;
-          border-radius: 0.375rem;
-          font-size: 0.875rem;
-        }
-
-        .remove-filter {
-          border: none;
-          background: none;
-          cursor: pointer;
-          padding: 0.125rem;
-          color: #2563eb;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .example-section {
-          margin-top: 1rem;
-          padding: 1rem;
-          background-color: #f9fafb;
-          border-radius: 0.5rem;
-        }
-
-        .example-section h3 {
-          margin: 0 0 0.5rem 0;
-          font-size: 0.875rem;
-          color: #4b5563;
-        }
-
-        .example-section ul {
-          margin: 0;
-          padding-left: 1.5rem;
-          font-size: 0.875rem;
-          color: #6b7280;
-        }
-
-        .example-section li {
-          margin: 0.25rem 0;
-        }
-      </style>
-    `;
-
-    const html = `
-      <div class="container">
-        <div class="search-bar">
-          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-          <input
-            type="text"
-            class="search-input"
-            placeholder="${this.getAttribute('placeholder') || 'Search members (try: active members, member since 2023)'}"
-            value="${this._searchText}"
-          >
-          ${this._searchText ? `
-            <button class="clear-btn">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
-            </button>
-          ` : ''}
-          
-          ${this._suggestions.length > 0 ? `
-            <div class="suggestions">
-              ${this._suggestions.map(suggestion => `
-                <div class="suggestion-item">${suggestion}</div>
-              `).join('')}
-            </div>
-          ` : ''}
-        </div>
-
-        <div class="filters">
-          <div style="position: relative;">
-            <button class="filter-btn">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
-              </svg>
-              Filters
-            </button>
-            
-            ${this._showFilterMenu ? `
-              <div class="filter-menu">
-                ${this._commonFilters.map(filter => `
-                  <button
-                    class="filter-option ${this._activeFilters.has(filter.id) ? 'active' : ''}"
-                    data-id="${filter.id}"
-                  >
-                    ${filter.label}
-                  </button>
-                `).join('')}
-              </div>
-            ` : ''}
-          </div>
-
-          ${Array.from(this._activeFilters).map(filterId => {
-            const filter = this._commonFilters.find(f => f.id === filterId);
-            return filter ? `
-              <div class="active-filter">
-                ${filter.label}
-                <button class="remove-filter" data-id="${filter.id}">
-                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                  </svg>
-                </button>
-              </div>
-            ` : '';
-          }).join('')}
-        </div>
-
-        <div class="example-section">
-          <h3>Example searches:</h3>
-          <ul>
-            <li>"active members in California"</li>
-            <li>"member since January 2023"</li>
-            <li>"premium members with expired cards"</li>
-            <li>"members@example.com"</li>
-            <li>"paid > $500 last month"</li>
-          </ul>
-        </div>
-      </div>
-    `;
-
-    this.shadowRoot.innerHTML = styles + html;
-
-    if (this._bindEvents) {
-      this._bindEvents();
-    }
-  }
 }
 
-// Register the web component
-customElements.define('member-search', MemberSearch);
+customElements.define('member-table', MemberTable);
