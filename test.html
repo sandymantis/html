@@ -1,3 +1,14 @@
+// projects/search-card-library/src/lib/search-card-library.module.ts
+import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { SearchCardComponent } from './search-card/search-card.component'; // Adjust the path as needed
+
+@NgModule({
+  declarations: [SearchCardComponent], // Declare the components
+  imports: [CommonModule], // Import CommonModule for Angular directives like *ngIf, *ngFor, etc.
+  exports: [SearchCardComponent] // Export the component for use in other projects
+})
+export class SearchCardLibraryModule { }
 
 // src/main.ts
 import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
