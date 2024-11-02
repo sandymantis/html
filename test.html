@@ -1,3 +1,28 @@
+import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { SearchCardComponent } from './search-card/search-card.component';
+
+@NgModule({
+  declarations: [SearchCardComponent],
+  imports: [CommonModule],
+  exports: [SearchCardComponent]
+})
+export class SearchCardLibraryModule {
+  constructor() {
+    this.loadWebComponentScript();
+  }
+
+  private loadWebComponentScript(): void {
+    const script = document.createElement('script');
+    script.src = 'assets/web-components/my-wc-lib.js'; // Path to the copied script
+    script.type = 'text/javascript';
+    script.async = true;
+    document.head.appendChild(script);
+  }
+}
+
+
+
 // projects/search-card-library/src/lib/search-card-library.module.ts
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
