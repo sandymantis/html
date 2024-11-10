@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Table Web Component</title>
+</head>
+<body>
+  <h1>Data Table Component Example</h1>
+  <data-table></data-table>
+
+  <script>
+    class DataTable extends HTMLElement {
+      constructor() {
+        super();
+        this.attachShadow({ mode: 'open' });
+      }
+
+      connectedCallback() {
+        const data = [
+          { Name: "Alice Johnson", Email: "alice@example.com", Username: "alicej" },
+          { Name: "Bob Smith", Email: "bob@example.com", Username: "bobsmith" },
+          { Name: "Charlie Brown", Email: "charlie@example.com", Username: "charlieb" }
+        ];
+        this.render(data);
+      }
+
+      render(data) {
+        this.shadowRoot.innerHTML = `
+          <style>
+            table { width: 100%; border-collapse: collapse; }
+            th, td { border: 1px solid #ddd; padding: 8px; }
+          </style>
+          <table>
+            <thead>
+              <tr>${Object.keys(data[0] || {}).map(key => `<th>${key}</th>`).join('')}</tr>
+            </thead>
+            <tbody>
+              ${data.map(row => `
+                <tr>${Object.values(row).map(value => `<td>${value}</td>`).join('')}</tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+      }
+    }
+
+    customElements.define('data-table', DataTable);
+  </script>
+</body>
+</html>
