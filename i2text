@@ -1,4 +1,45 @@
- <div 
+from flask import Flask, request, jsonify
+import pytesseract
+from PIL import Image
+import io
+
+app = Flask(__name__)
+
+# Configure Tesseract path if it's not in your system's PATH
+# Uncomment the following line and set the path if needed
+# pytesseract.pytesseract.tesseract_cmd = '/path/to/tesseract'
+
+@app.route('/ocr', methods=['POST'])
+def ocr_image():
+    # Check if the request contains a file part with key 'image'
+    if 'image' not in request.files:
+        return jsonify({'error': 'No image uploaded'}), 400
+
+    # Retrieve the uploaded image from the request
+    image_file = request.files['image']
+    
+    try:
+        # Open the image using PIL directly from the file stream
+        img = Image.open(image_file.stream)
+    except Exception as e:
+        return jsonify({'error': f'Could not open image: {e}'}), 400
+
+    # Perform OCR on the image
+    try:
+        text = pytesseract.image_to_string(img)
+    except Exception as e:
+        return jsonify({'error': f'OCR processing failed: {e}'}), 500
+
+    # Return the extracted text as a JSON response
+    return jsonify({'text': text})
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+
+
+
+<div 
   class="paste-area" 
   (paste)="onPaste($event)">
   Paste your screenshot here
