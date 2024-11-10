@@ -49,3 +49,97 @@
   </script>
 </body>
 </html>
+
+
+class DataTable extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+    this.handleRefresh = this.handleRefresh.bind(this);
+  }
+
+  connectedCallback() {
+    const data = JSON.parse(this.getAttribute('data') || '[]');
+    this.render(data);
+
+    // Attach event listener for the button
+    this.shadowRoot.querySelector('#refresh-button').addEventListener('click', this.handleRefresh);
+  }
+
+  disconnectedCallback() {
+    // Clean up event listener to prevent memory leaks
+    this.shadowRoot.querySelector('#refresh-button').removeEventListener('click', this.handleRefresh);
+  }
+
+  handleRefresh() {
+    // Refreshes the page on button click
+    window.location.reload();
+  }
+
+  render(data) {
+    this.shadowRoot.innerHTML = `
+      <style>
+        /* Add basic styling for the table and button */
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 8px; }
+        #refresh-button { margin: 10px 0; padding: 5px 10px; cursor: pointer; }
+      </style>
+      <button id="refresh-button">Refresh Table</button>
+      <table>
+        <thead>
+          <tr>${Object.keys(data[0] || {}).map(key => `<th>${key}</th>`).join('')}</tr>
+        </thead>
+        <tbody>
+          ${data.map(row => `
+            <tr>${Object.values(row).map(value => `<td>${value}</td>`).join('')}</tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+}
+
+customElements.define('data-table', DataTable);
+
+
+
+
+
+// pages/_app.js
+import '../public/data-table.js';
+
+export default function App({ Component, pageProps }) {
+  return <Component {...pageProps} />;
+}
+
+// pages/index.js
+import { useEffect } from 'react';
+
+export async function getServerSideProps() {
+  // Hard-coded fetchData function to simulate data fetching
+  const fetchData = () => [
+    { Name: "Alice Johnson", Email: "alice@example.com", Username: "alicej" },
+    { Name: "Bob Smith", Email: "bob@example.com", Username: "bobsmith" },
+    { Name: "Charlie Brown", Email: "charlie@example.com", Username: "charlieb" }
+  ];
+
+  const data = fetchData();
+  return { props: { data } };
+}
+
+export default function Home({ data }) {
+  useEffect(() => {
+    import('../public/data-table.js'); // Dynamically import the data-table component
+  }, []);
+
+  return (
+    <div>
+      <h1>Data Table</h1>
+      {/* Pass the data to the data-table component as a JSON string */}
+      <data-table data={JSON.stringify(data)}></data-table>
+    </div>
+  );
+}
+
+
+
