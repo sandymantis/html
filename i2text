@@ -1,0 +1,72 @@
+ <div 
+  class="paste-area" 
+  (paste)="onPaste($event)">
+  Paste your screenshot here
+</div>
+<button (click)="submitImage()">Submit</button>
+
+
+import { Component, ElementRef, ViewChild } from '@angular/core';
+
+@Component({
+  selector: 'app-image-ocr',
+  templateUrl: './image-ocr.component.html',
+  styleUrls: ['./image-ocr.component.css']
+})
+export class ImageOcrComponent {
+  @ViewChild('pasteArea') pasteArea!: ElementRef;
+  pastedImage: any;
+
+  onPaste(event: ClipboardEvent) {
+    const items = event.clipboardData?.items;
+    if (items) {
+      for (let item of items) {
+        if (item.type.indexOf("image") !== -1) {
+          const blob = item.getAsFile();
+          if (blob) {
+            this.pastedImage = blob;
+            // Display preview if necessary
+          }
+        }
+      }
+    }
+  }
+
+  submitImage() {
+    if (this.pastedImage) {
+      const formData = new FormData();
+      formData.append('image', this.pastedImage, 'pasted_image.png');
+      // Call your service to submit to backend
+      this.imageService.uploadImage(formData).subscribe(response => {
+        console.log(response);
+      });
+    }
+  }
+}
+
+
+import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class ImageService {
+  private apiUrl = 'http://your-backend-url/api/upload';
+
+  constructor(private http: HttpClient) {}
+
+  uploadImage(formData: FormData) {
+    return this.http.post(this.apiUrl, formData);
+  }
+}
+
+.paste-area {
+  width: 100%;
+  height: 200px;
+  border: 2px dashed #cccccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #cccccc;
+}
