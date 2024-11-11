@@ -117,3 +117,30 @@ export class ImageService {
   margin-top: 10px;
   border: 1px solid #cccccc;
 }
+
+
+
+import openai
+import base64
+
+# Open the image in binary mode and encode it to base64
+with open("your_screenshot.png", "rb") as image_file:
+    encoded_image = base64.b64encode(image_file.read()).decode('utf-8')
+
+openai.api_key = 'your-api-key'
+
+# Send the base64-encoded image
+response = openai.ChatCompletion.create(
+    model="gpt-4-turbo",
+    messages=[
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": "Can you analyze this image?"},
+                {"type": "image_base64", "image_base64": encoded_image}
+            ]
+        }
+    ]
+)
+
+print(response.choices[0].message['content'])
