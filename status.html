@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Agent Working</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: #0e0e0e;
+      color: #00ffcc;
+      font-family: 'Courier New', Courier, monospace;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      flex-direction: column;
+    }
+
+    .status-message {
+      font-size: 1.5rem;
+      margin-top: 1rem;
+      text-align: center;
+      white-space: pre-line;
+    }
+
+    .dot-animation::after {
+      content: '';
+      display: inline-block;
+      animation: dots 1s steps(3, end) infinite;
+    }
+
+    @keyframes dots {
+      0% { content: ''; }
+      33% { content: '.'; }
+      66% { content: '..'; }
+      100% { content: '...'; }
+    }
+  </style>
+</head>
+<body>
+  <div class="status-message" id="statusMessage">Initializing...</div>
+
+  <script>
+    const messages = [
+      "Orchestrator Agent Initialized...",
+      "Loading Project...",
+      "Coder Agent Making Changes...",
+      "Applying Code...",
+      "Deploying App..."
+    ];
+
+    //       "Finalizing...",
+    //   "Reloading App..."
+
+    const delay = 1500; // 1.5 seconds per message
+    const statusEl = document.getElementById('statusMessage');
+
+    let current = 0;
+
+    function showNextMessage() {
+      if (current < messages.length) {
+        statusEl.textContent = messages[current];
+        current++;
+        setTimeout(showNextMessage, delay);
+      } // Else, do nothing — wait for external event to replace the app
+    }
+
+    showNextMessage();
+  </script>
+</body>
+</html>
